@@ -16,12 +16,13 @@
                     <div class="row mt-2">
                         <div class="col-12">
                             <div class="table-responsive">
-                                <table id="tblSpvSales" class="table table-striped table-bordered">
+                                <table id="tblSales" class="table table-striped table-bordered">
                                     <thead>
                                         <tr>
                                             <th>No</th>
-                                            <th>Nama SPV</th>
-                                            <th>Status SPV</th>
+                                            <th>Nama Sales</th>
+                                            <th>SPV Sales</th>
+                                            <th>Status Sales</th>
                                             <th>Aksi</th>
                                         </tr>
                                     </thead>
@@ -70,6 +71,7 @@
     <script>
         const url = "<?= BASEURL ?>";
         let spv = [];
+        let dataSales = [];
         let posisition = [];
         let filterSpv = [];
 
@@ -148,7 +150,7 @@
             });
 
             getAllDataKaryawanNew(url).then(data => {
-                let filterData = data.filter((it) => it.kd_position === 'PST-202501-0003');
+                let filterData = data.filter((it) => it.kd_position === 'PST-202501-0003' && it.daftar_sales === 'TIDAK');
                 filterSpv = data
                 loadSelectSales(filterData)
             }).catch(err => {
@@ -162,6 +164,17 @@
             getAllPosisiton(url).then(data => {
                 let filterPosisi = data.filter((it) => it.kd_position === 'PST-202501-0003');
                 posisition = filterPosisi
+            }).catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: `Terjadi kesalahan getAllPosisiton: ${err.statusText || err}`,
+                });
+            });
+
+            getAllSales(url).then(data => {
+                dataSales = data
+                loadDataSales(data)
             }).catch(err => {
                 Swal.fire({
                     icon: 'error',
@@ -245,6 +258,58 @@
 
             data.forEach(item => {
                 selectSales.append(`<option value="${item.kd_karyawan}">${item.nama_karyawan}</option>`);
+            })
+        }
+
+        const loadDataSales = (data) => {
+            $('#tblSales').DataTable({
+                data: data,
+                columns: [{
+                        data: null,
+                        width: '5%',
+                        render: function(data, type, row, meta) {
+                            return meta.row + 1;
+                        }
+                    },
+                    {
+                        data: 'karyawan.nama_karyawan',
+                    },
+                    {
+                        data: 'spv_sales.karyawan.nama_karyawan'
+                    },
+                    {
+                        data: null,
+                        render: function(data, type, row, meta) {
+                            let badge;
+                            if (row.status_sales === 'ACTIVE') {
+                                badge = `<span class="badge bg-success">${row.status_sales}</span>`
+                            } else {
+                                badge = `<span class="badge bg-danger">${row.status_sales}</span>`
+                            }
+                            return `${badge}`;
+                        }
+                    },
+                    {
+                        data: null,
+                        render: function(data, type, row, meta) {
+                            return `
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-edit btn btn-warning btn-sm" onclick='' data-bs-toggle="modal" data-bs-target="#modalUbahSpvSales"></i>
+                                <div class="mx-2" style="border-left: 1px solid #000000; height: 24px;"></div>
+                                <i class="fas fa-trash btn btn-danger btn-sm" onclick=''></i>
+                            </div>
+                        `
+                        }
+                    }
+                ],
+                initComplete: function() {
+                    $('#tblSales tbody').on('mouseenter', 'tr', function() {
+                        $(this).css('background-color', 'Yellow');
+                    });
+                    $('#tblSales tbody').on('mouseleave', 'tr', function() {
+                        $(this).css('background-color', '');
+                    });
+                }
             })
         }
     </script>

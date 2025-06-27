@@ -28,4 +28,14 @@ class Sales extends Model
 
     public $timestamps = false;
 
+    public function Karyawan()
+    {
+        return $this->belongsTo(Karyawan::class, 'kd_karyawan', 'kd_karyawan');
+    }
+
+    public function SpvSales()
+    {
+        return $this->belongsTo(SpvSales::class, 'kd_spv_sales', 'kd_spv_sales');
+    }
+
 }

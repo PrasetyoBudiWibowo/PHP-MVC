@@ -27,7 +27,7 @@ class SpvSales extends Model
 
     public $timestamps = false;
 
-        public function Karyawan()
+    public function Karyawan()
     {
         return $this->belongsTo(Karyawan::class, 'kd_karyawan', 'kd_karyawan');
     }

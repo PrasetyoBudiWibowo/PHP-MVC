@@ -145,6 +145,31 @@ async function getAllSpvSales(url) {
     }
 }
 
+async function getAllSales(url) {
+      try {
+        const response = await fetch(`${url}/sales/allDataSales`);
+        const result = await response.json();
+
+        if (result.status === "success") {
+            return result.data;
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Gagal',
+                text: `Terjadi kesalahan pada server.`,
+            });
+            return [];
+        }
+    } catch (error) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal',
+            text: `Terjadi kesalahan ${error.message}.`,
+        });
+        return [];
+    }
+}
+
 
 window.getAllDataKaryawan = getAllDataKaryawan;
 window.getAllDataKaryawanNew = getAllDataKaryawanNew;
@@ -152,3 +177,4 @@ window.getAllDataSumberInformasi = getAllDataSumberInformasi;
 window.fetchDataSumberInformasiDetail = fetchDataSumberInformasiDetail;
 window.getAllPosisiton = getAllPosisiton;
 window.getAllSpvSales = getAllSpvSales;
+window.getAllSales = getAllSales;

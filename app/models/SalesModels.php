@@ -88,6 +88,32 @@ class SalesModels
         return $result;
     }
 
+    public function getAllSales()
+    {
+        $data = Sales::with(['Karyawan', 'SpvSales.Karyawan'])->get();
+
+        $result = $data->map(function ($d) {
+            return [
+                'kd_master_sales' => $d->kd_master_sales,
+                'kd_spv_sales' => $d->kd_spv_sales,
+                'kd_karyawan' => $d->kd_karyawan,
+                'status_sales' => $d->status_sales,
+                'karyawan' => [
+                    'nama_karyawan' => optional($d->karyawan)->nama_karyawan,
+                    'nama_panggilan_karyawan' => optional($d->karyawan)->nama_panggilan_karyawan,
+                ],
+                'spv_sales' => [
+                    'karyawan' => [
+                        'nama_karyawan' => optional(optional($d->spvSales)->karyawan)->nama_karyawan,
+                        'nama_panggilan_karyawan' => optional(optional($d->spvSales)->karyawan)->nama_panggilan_karyawan,
+                    ]
+                ]
+            ];
+        });
+
+        return $result;
+    }
+
     public function cekSpvSalesBySpvSales($kdSpvSales)
     {
         $result = SpvSales::where('kd_spv_sales', '=', $kdSpvSales)->first();
@@ -257,10 +283,7 @@ class SalesModels
             }
 
             $updateSuccess = $karyawan->update([
-                'kd_divisi' => $posisition->kd_divisi,
-                'kd_departement' => $posisition->kd_departement,
-                'kd_position' => $posisition->kd_position,
-                'daftar_spv_sales' => "YA",
+                'daftar_sales' => "YA",
             ]);
 
             if (!$updateSuccess) {
