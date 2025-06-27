@@ -1,0 +1,122 @@
+<?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
+$user = $_SESSION['user'] ?? null;
+?>
+<div id="layoutSidenav_nav">
+    <nav class="sb-sidenav accordion sb-sidenav-dark" id="sidenavAccordion">
+        <div class="sb-sidenav-menu">
+            <div class="nav">
+                <div class="sb-sidenav-menu-heading">MENU UTAMA</div>
+                <a class="nav-link" href="<?= BASEURL; ?>">
+                    <div class="sb-nav-link-icon"><i class="fas fa-tachometer-alt"></i></div>
+                    Dashboard Sales
+                </a>
+                <div class="sb-sidenav-menu-heading">MENU</div>
+
+                <!-- Master Data -->
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseMasterDataSales"
+                    aria-expanded="false" aria-controls="collapseMasterDataSales">
+                    <div class="sb-nav-link-icon"><i class="fa-solid fa-bars"></i></div>
+                    MASTER DATA
+                    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                </a>
+                <div class="collapse" id="collapseMasterDataSales" aria-labelledby="headingOne"
+                    data-bs-parent="#sidenavAccordion">
+                    <nav class="sb-sidenav-menu-nested nav">
+
+                        <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+                            data-bs-target="#collapseSales" aria-expanded="false" aria-controls="collapseSales" id="posisiHeading">
+                            <div class="sb-nav-link-icon"><i class="fa-solid fa-folder"></i></div>
+                            Master Sales
+                            <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                        </a>
+                        <div class="collapse" id="collapseSales" aria-labelledby="posisiHeading">
+                            <nav class="sb-sidenav-menu-nested nav">
+                                <a class="nav-link m-1">
+                                    Master Customer
+                                </a>
+                                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse"
+                                    data-bs-target="#collapseSumberInformasiBukuTamu" aria-expanded="false" aria-controls="collapseSumberInformasiBukuTamu" id="posisiHeading">
+                                    <div class="sb-nav-link-icon"><i class=""></i></div>
+                                    Master Sales
+                                    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                                </a>
+                                <div class="collapse" id="collapseSumberInformasiBukuTamu" aria-labelledby="posisiHeading">
+                                    <nav class="sb-sidenav-menu-nested nav">
+                                        <a class="nav-link m-1" href="<?= BASEURL; ?>/sales/spv">
+                                            SPV
+                                        </a>
+                                        <a class="nav-link m-1" href="<?= BASEURL; ?>/sales/sales">
+                                            Sales
+                                        </a>
+                                    </nav>
+                                </div>
+
+                            </nav>
+                        </div>
+
+                    </nav>
+                </div>
+                <a class="nav-link" href="#" id="ubahDataByUser">
+                    <div class="sb-nav-link-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+                    Ubah Data
+                </a>
+            </div>
+        </div>
+    </nav>
+</div>
+<script>
+    $(document).ready(function() {
+        $('#ubahDataByUser').on('click', function(event) {
+            event.preventDefault();
+            $.ajax({
+                url: '<?= BASEURL ?>/user/getUserByLogin',
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    if (data.error) {
+                        console.error(data.error);
+                    } else {
+                        dataByUser(data)
+                    }
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('Error fetching user data:', textStatus, errorThrown);
+                }
+            });
+        });
+    })
+
+    const dataByUser = (data) => {
+        let dataTemp = {
+            kd_user: data.kd_asli_user,
+            nama_user: data.username,
+            id_usr_level: data.id_level_user,
+            password: data.password_tampil,
+            status_user: data.status_user,
+            blokir: data.blokir,
+            img_user: data.img_user,
+            format_img_user: data.format_img_user,
+            user_input: $('#kd_asli_user').data('kd_asli_user'),
+        }
+        $.ajax({
+            url: `<?= BASEURL; ?>/user/dataTempEdit`,
+            method: 'POST',
+            data: dataTemp,
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === "success") {
+                    window.location.href = '<?= BASEURL; ?>/user/ubah';
+                } else {
+                    showModalMessage('Error', response.message, 'error');
+                }
+            },
+            error: function(xhr) {
+                showModalMessage('Error', xhr.responseText, 'error');
+            }
+        })
+    }
+</script>
