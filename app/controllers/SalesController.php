@@ -96,7 +96,7 @@ class SalesController extends Controller
 
                 $kdKaryawan = $inputData['kd_karyawan'] ?? '';
                 $namaSpv = $inputData['nama_spv_sales'] ?? '';
-                
+
                 $cekKaryawan = $this->model('HrdModels')->cekKaryawanByKd($kdKaryawan);
 
                 if (!$cekKaryawan) {
@@ -178,6 +178,70 @@ class SalesController extends Controller
                 } else {
                     echo json_encode(['status' => 'error', 'message' => 'Tidak ada perubahan data.']);
                 }
+            }
+        } catch (\Throwable $th) {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => $th->getMessage()]);
+        }
+    }
+
+    public function validasiSimpanSales()
+    {
+        header('Content-Type: application/json');
+        $log = AppLogger::getLogger('SIMPAN-SALES');
+
+        try {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $log->info("<================= MULAI PROSES SIMPAN SALES =================>");
+                $log->info("<================= MULAI PROSES DI CONTROLLER validasiSimpanSales =================>");
+
+                $inputData = json_decode(file_get_contents('php://input'), true);
+
+                if (!$inputData) {
+                    throw new \Exception('Data input tidak valid (bukan JSON).');
+                }
+
+                $submittedToken = $inputData['csrf_token'] ?? '';
+                if (!$this->csrfTokenManager->isTokenValid(new CsrfToken('inputSales', $submittedToken))) {
+                    $log->info("<================= TOKEN TIDAK VALID =================>");
+                    throw new \Exception('TOKEN TIDAK VALID');
+                    return;
+                }
+
+                $kdKaryawan = $inputData['kd_karyawan'] ?? '';
+                $namaSales = $inputData['nama_sales'] ?? '';
+
+                $cekKaryawan = $this->model('HrdModels')->cekKaryawanByKd($kdKaryawan);
+
+                if (!$cekKaryawan) {
+                    $log->error("Validasi gagal untuk input cekKaryawan", [
+                        'invalid_input' => $namaSales,
+                        'expected_format' => 'KARYAWAN TIDAK DITEMUKAN'
+                    ]);
+
+                    throw new \Exception("Karyawan Dengan nama: \"{$namaSales}\" Tidak ditemukan");
+                }
+
+                $sales =  $this->model('SalesModels')->cekSalesByKdKaryawan($kdKaryawan);
+
+                if ($sales) {
+                    $log->error("Validasi gagal untuk input nama_sales", [
+                        'invalid_input' => $sales,
+                        'expected_format' => 'SALES SUDAH DIDAFTARKAN'
+                    ]);
+
+                    throw new \Exception("Sales sudah dengan nama: \"{$namaSales}\". Sudah Terdaftar");
+                }
+
+                $result = $this->model('SalesModels')->simpanSales($inputData);
+
+                if ($result) {
+                    echo json_encode(['status' => 'success', 'message' => 'Data berhasil disimpan.']);
+                } else {
+                    echo json_encode(['status' => 'error', 'message' => 'Tidak ada perubahan data.']);
+                }
+            } else {
+                throw new \Exception('Metode request tidak valid di validasiSimpanSales');
             }
         } catch (\Throwable $th) {
             header('Content-Type: application/json');

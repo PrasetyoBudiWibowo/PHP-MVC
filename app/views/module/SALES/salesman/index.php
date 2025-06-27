@@ -46,16 +46,17 @@
                                     <select class="form-control" name="kd_spv_sales" id="kd_spv_sales"></select>
                                 </div>
                                 <div class="mb-3">
-                                    <label for="kd_sales" class="form-label">Pilih SPV</label>
-                                    <select class="form-control" name="kd_sales" id="kd_sales"></select>
+                                    <label for="kd_karyawan" class="form-label">Pilih Sales</label>
+                                    <select class="form-control" name="kd_karyawan" id="kd_karyawan"></select>
                                     <input type="hidden" autocomplete="off" class="form-control" id="nama_sales" placeholder="Masukkan Nama Sales" disabled>
+                                    <input type="hidden" autocomplete="off" class="form-control" id="kd_posisi" disabled>
                                 </div>
                             </div>
                             <div class="modal-footer">
                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="tutup">
                                     <i class="fa-solid fa-xmark"></i> Tutup
                                 </button>
-                                <button type="button" class="btn btn-primary" id="btnSimpanSpvSales">
+                                <button type="button" class="btn btn-primary" id="btnSimpanSales">
                                     <i class="fa-solid fa-paper-plane"></i> Simpan
                                 </button>
                             </div>
@@ -69,7 +70,71 @@
     <script>
         const url = "<?= BASEURL ?>";
         let spv = [];
+        let posisition = [];
         let filterSpv = [];
+
+        const simpanDataSales = async () => {
+            const csrfToken = $('#csrf_token').val();
+            let kdKaryawan = $('#kd_karyawan').val();
+            let kdSpvSalaes = $('#kd_spv_sales').val();
+            let namaSales = $('#nama_sales').val();
+            let kdPosisi = $('#kd_posisi').val();
+            let user_input = $('#kd_asli_user').data('kd_asli_user');
+
+            let dataToSave = {
+                csrf_token: csrfToken,
+                kd_karyawan: kdKaryawan,
+                kd_spv_sales: kdSpvSalaes,
+                nama_sales: namaSales,
+                kd_position: kdPosisi,
+                kd_user: user_input,
+            }
+
+            try {
+                Swal.fire({
+                    title: 'Menyimpan data...',
+                    text: 'Mohon tunggu sebentar.',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                })
+
+                const response = await fetch(`<?= BASEURL; ?>/sales/validasiSimpanSales`, {
+                    method: 'POST',
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(dataToSave)
+                });
+
+                const result = await response.json();
+                Swal.close();
+                if (result.status === "success") {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: result.message || 'Data berhasil Disimpan!',
+                    }).then(() => {
+                        $('#modalTambahSpvSales').modal('hide');
+                        window.location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: result.message,
+                    });
+                }
+            } catch (error) {
+                Swal.close();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: `Terjadi kesalahan ${error.message}.`,
+                });
+            }
+        }
 
         $(document).ready(function() {
             getAllSpvSales(url).then(data => {
@@ -94,39 +159,75 @@
                 });
             });
 
+            getAllPosisiton(url).then(data => {
+                let filterPosisi = data.filter((it) => it.kd_position === 'PST-202501-0003');
+                posisition = filterPosisi
+            }).catch(err => {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Gagal',
+                    text: `Terjadi kesalahan getAllPosisiton: ${err.statusText || err}`,
+                });
+            });
+
+            $('#modalTambahSales').modal({
+                backdrop: 'static',
+                keyboard: false
+            });
+
+            $('#modalTambahSales').on('hidden.bs.modal', function() {
+                $(this).find('input').val('');
+            });
+
             $('#modalTambahSales').on('shown.bs.modal', function() {
                 defaultSelect2("#kd_spv_sales", "-- Pilih SPV --", '#modalTambahSales');
-                defaultSelect2("#kd_sales", "-- Pilih SALES --", '#modalTambahSales');
+                defaultSelect2("#kd_karyawan", "-- Pilih SALES --", '#modalTambahSales');
             });
 
             $('#kd_spv_sales').on('change', function() {
                 const selectedValue = $(this).val();
 
                 if (selectedValue) {
-                    $('#kd_sales').prop('disabled', false);
+                    $('#kd_karyawan').prop('disabled', false);
                 } else {
-                    $('#kd_sales').prop('disabled', true);
+                    $('#kd_karyawan').prop('disabled', true);
                 }
             });
 
-            $('#kd_sales').prop('disabled', true);
+            $('#kd_karyawan').prop('disabled', true);
 
-            $('#kd_sales').on('change', function() {
+            $('#kd_karyawan').on('change', function() {
                 const selectedKd = $(this).val();
                 const selectedSpv = filterSpv.find(item => item.kd_karyawan === selectedKd);
                 if (selectedSpv) {
                     $('#nama_sales').val(selectedSpv.nama_karyawan);
+                    $('#kd_posisi').val(posisition[0].kd_position);
                 } else {
                     $('#nama_sales').val('');
+                    $('#kd_posisi').val('');
                 }
+            });
+
+            $('#btnSimpanSales').on('click', () => {
+                Swal.fire({
+                    title: 'Konfirmasi',
+                    text: 'Apakah Anda yakin ingin menyimpan data ini?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Simpan!',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        simpanDataSales()
+                    }
+                });
             });
         });
 
         const loadSelectSpv = (data) => {
             let spvActive = data.filter((it) => it.status_spv_sales === 'ACTIVE')
             let selectedSpv = $('#kd_spv_sales');
-
-            console.log('sko', spvActive)
 
             selectedSpv.empty()
             selectedSpv.append('<option value="" disabled selected>-- PILIH SPV --</option>');
@@ -137,7 +238,7 @@
         }
 
         const loadSelectSales = (data) => {
-            let selectSales = $('#kd_sales');
+            let selectSales = $('#kd_karyawan');
 
             selectSales.empty()
             selectSales.append('<option value="" disabled selected>-- PILIH SALES --</option>');

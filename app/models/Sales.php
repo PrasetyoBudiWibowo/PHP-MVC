@@ -14,7 +14,7 @@ class Sales extends Model
     protected $fillable = [
         'kd_master_sales',
         'kd_spv_sales',
-        'nama_sales',
+        'kd_karyawan',
         'status_sales',
         'user_input',
         'tgl_input',

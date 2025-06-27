@@ -7,6 +7,7 @@ use Illuminate\Database\Capsule\Manager as Capsule;
 use Carbon\Carbon;
 
 use App\Models\SpvSales;
+use App\Models\Sales;
 use App\Models\Karyawan;
 use App\Models\Posisition;
 use App\Helper\DeviceHelper;
@@ -48,6 +49,26 @@ class SalesModels
         return $prefix . $newNumber;
     }
 
+    private function generateKdSales()
+    {
+        $currentMonth = Carbon::now()->format('Ym');
+        $prefix = 'SLS-' . $currentMonth . '-';
+
+        $lastSales = Sales::where('kd_master_sales', 'LIKE', $prefix . '%')
+            ->orderBy('kd_master_sales', 'DESC')
+            ->first();
+
+        if (!$lastSales) {
+            return $prefix . '0000';
+        }
+
+        $lastCode = $lastSales->kd_master_sales;
+        $lastNumber = substr($lastCode, -4);
+
+        $newNumber = str_pad(intval($lastNumber) + 1, 4, '0', STR_PAD_LEFT);
+        return $prefix . $newNumber;
+    }
+
     public function getAllSpvSales()
     {
         $data = SpvSales::with('Karyawan')->get();
@@ -76,6 +97,12 @@ class SalesModels
     public function cekSpvSalesByKdKaryawan($kdKaryawan)
     {
         $result = SpvSales::where('kd_karyawan', '=', $kdKaryawan)->first();
+        return $result;
+    }
+
+    public function cekSalesByKdKaryawan($kdKaryawan)
+    {
+        $result = Sales::where('kd_karyawan', '=', $kdKaryawan)->first();
         return $result;
     }
 
@@ -187,7 +214,7 @@ class SalesModels
                 $log->info("gagal proses ubah data di database");
                 throw new \Exception("update gagal di ubahSpvSales.");
             }
-            
+
 
             $log->info("data di database SumberInformasiBukuTamu berhasil di ubah");
 
@@ -196,6 +223,91 @@ class SalesModels
             $log->info("<========================== SELESAI ==========================>");
 
             return $spvSales;
+        } catch (\Throwable $th) {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => $th->getMessage()]);
+        }
+    }
+
+    public function simpanSales($data)
+    {
+        Capsule::beginTransaction();
+        $log = AppLogger::getLogger('SALES');
+
+        try {
+            $log->info("<================= MULAI PROSES SIMPAN DATA KE DATABASE =================>");
+            $log->info("Data dari controller: " . json_encode($data));
+
+            $karyawan = Karyawan::find($data['kd_karyawan']);
+            if (!$karyawan) {
+                $log->error("Karyawan tidak ditemukan", [
+                    'invalid_input' => $karyawan,
+                    'expected_format' => 'KARYAWAN TIDAK DI TEMUKAN'
+                ]);
+                throw new \Exception("Karyawan tidak ditemukan");
+            }
+
+            $posisition = Posisition::find($data['kd_position']);
+            if (!$posisition) {
+                $log->error("Validasi gagal untuk input nama_karyawan", [
+                    'invalid_input' => $posisition,
+                    'expected_format' => 'POSISI TIDAK DI TEMUKAN'
+                ]);
+                throw new \Exception("Posistion tidak ditemukan");
+            }
+
+            $updateSuccess = $karyawan->update([
+                'kd_divisi' => $posisition->kd_divisi,
+                'kd_departement' => $posisition->kd_departement,
+                'kd_position' => $posisition->kd_position,
+                'daftar_spv_sales' => "YA",
+            ]);
+
+            if (!$updateSuccess) {
+                $log->error("Gagal mengupdate data karyawan", [
+                    'invalid_input' => $updateSuccess,
+                    'expected_format' => 'GAGAL UPDATA KARYAWAN'
+                ]);
+                throw new \Exception("Gagal mengupdate data karyawan.");
+            }
+
+            $kdSales = $this->generateKdSales();
+            $log->info("berhasil buat code PK");
+
+            $tgl_input = Carbon::now()->toDateString();
+            $bln_input = Carbon::now()->format('m');
+            $thn_input = Carbon::now()->year;
+            $waktu_input = Carbon::now()->setTimezone('Asia/Jakarta')->format('H:i');
+
+            $userAgent = $_SERVER['HTTP_USER_AGENT'];
+            $deviceInfo = DeviceHelper::detectDevice($userAgent);
+            $deviceType = $deviceInfo['deviceType'];
+            $device = $deviceInfo['browser'];
+
+            $ipDetector = GeoDetector::getDeviceLocation();
+            $ipDevice = isset($ipDetector['ip']) ? $ipDetector['ip'] : 'Unknown IP';
+
+            $sales = new Sales();
+            $sales->kd_master_sales = $kdSales;
+            $sales->kd_spv_sales = $data['kd_spv_sales'];
+            $sales->kd_karyawan = $data['kd_karyawan'];
+            $sales->status_sales = 'ACTIVE';
+            $sales->user_input = $data['kd_user'];
+            $sales->tgl_input = $tgl_input;
+            $sales->bln_input = $bln_input;
+            $sales->thn_input = $thn_input;
+            $sales->waktu_input = $waktu_input;
+            $sales->device = $device;
+            $sales->alamat_device = $ipDevice;
+            $sales->type_device = $deviceType;
+
+            $log->info("<================= PROSES SIMPAN DATA KE DATABASE BERHASIL =================>");
+            $sales->save();
+            $log->info("<================= DATA BERHASIL TERSIMPAN KE DATABASE =================>");
+
+            Capsule::commit();
+
+            return $sales;
         } catch (\Throwable $th) {
             header('Content-Type: application/json');
             echo json_encode(['status' => 'error', 'message' => $th->getMessage()]);
