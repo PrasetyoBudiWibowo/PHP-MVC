@@ -196,6 +196,7 @@ class SalesController extends Controller
         } catch (\Throwable $th) {
             header('Content-Type: application/json');
             echo json_encode(['status' => 'error', 'message' => $th->getMessage()]);
+            exit;
         }
     }
 
@@ -260,6 +261,7 @@ class SalesController extends Controller
         } catch (\Throwable $th) {
             header('Content-Type: application/json');
             echo json_encode(['status' => 'error', 'message' => $th->getMessage()]);
+            exit;
         }
     }
 }

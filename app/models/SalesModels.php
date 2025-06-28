@@ -250,6 +250,7 @@ class SalesModels
 
             return $spvSales;
         } catch (\Throwable $th) {
+            Capsule::rollBack();
             header('Content-Type: application/json');
             echo json_encode(['status' => 'error', 'message' => $th->getMessage()]);
         }
@@ -332,6 +333,7 @@ class SalesModels
 
             return $sales;
         } catch (\Throwable $th) {
+            Capsule::rollBack();
             header('Content-Type: application/json');
             echo json_encode(['status' => 'error', 'message' => $th->getMessage()]);
         }

@@ -67,6 +67,17 @@ class BukuTamuController extends Controller
         $this->view('layouts/footer/footer');
     }
 
+    public function alasan_kunjungan_buku_tamu()
+    {
+        $data['csrf_token'] = $this->csrfTokenManager->getToken('inputAlasanKunjunganBukuTamu')->getValue();
+
+        $data['judul'] = 'Halaman Alasan Kunjungan Buku tamu';
+        $this->view('layouts/header/header', $data);
+        $this->view('layouts/sidebar/sidebarBukuTamu');
+        $this->view('module/BUKUTAMU/alasanKunjungan/index', $data);
+        $this->view('layouts/footer/footer');
+    }
+
     public function allDataSumberInformasi()
     {
         $sumberInformasi = $this->model('BukuTamuModels')->getAllSumberInfromasi();
@@ -88,6 +99,19 @@ class BukuTamuController extends Controller
 
         if ($sumberInformasiDetail) {
             echo json_encode(['status' => 'success', 'data' => $sumberInformasiDetail]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Tidak ada data.']);
+        }
+    }
+
+    public function allDataAlasanKunjungan()
+    {
+        $alasanKunjungan = $this->model('BukuTamuModels')->getAllAlasanKunjungan();
+
+        header('Content-Type: application/json');
+
+        if ($alasanKunjungan) {
+            echo json_encode(['status' => 'success', 'data' => $alasanKunjungan]);
         } else {
             echo json_encode(['status' => 'error', 'message' => 'Tidak ada data.']);
         }
@@ -320,6 +344,110 @@ class BukuTamuController extends Controller
             }
         } catch (\Exception $e) {
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+    }
+
+    public function validasiSimpanAlasanKunjungan()
+    {
+        header('Content-Type: application/json');
+        $log = AppLogger::getLogger('SIMPAN-ALASAN-KUNJUNGAN');
+
+        try {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $log->info("<================= MULAI PROSES UNTUK SIMPAN ALASAN KUJUNGAN BUKU TAMU =================>");
+                $log->info("<================= MULAI PROSES DI CONTROLLER validasiSimpanAlasanKunjungan =================>");
+
+                $inputData = json_decode(file_get_contents('php://input'), true);
+
+                if (!$inputData) {
+                    throw new \Exception('Data input tidak valid (bukan JSON).');
+                }
+
+                $submittedToken = $inputData['csrf_token'] ?? '';
+                if (!$this->csrfTokenManager->isTokenValid(new CsrfToken('inputAlasanKunjunganBukuTamu', $submittedToken))) {
+                    $log->info("<================= TOKEN TIDAK VALID =================>");
+                    throw new \Exception('TOKEN TIDAK VALID');
+                    return;
+                }
+
+                $validasiNamaAlasanKunjungan = v::stringType()
+                    ->notEmpty()
+                    ->length(1, 50)
+                    ->regex('/^[a-zA-Z\s&]+$/u');
+
+                $namaInput = $inputData['nama_alasan_kunjungan'];
+                $log->info("Nama Sumber Informasi: $namaInput");
+
+                if (!$validasiNamaAlasanKunjungan->validate($namaInput)) {
+                    throw new \Exception('Nama Sumber Informasi mengandung karakter lain selain huruf.');
+                }
+
+                $result = $this->model('BukuTamuModels')->simpanAlasanKunjungan($inputData);
+
+                if ($result) {
+                    echo json_encode(['status' => 'success', 'message' => 'Data berhasil disimpan.']);
+                } else {
+                    echo json_encode(['status' => 'error', 'message' => 'Tidak ada perubahan data.']);
+                }
+            } else {
+                throw new \Exception('Metode request tidak valid di validasiSimpanAlasanKunjungan');
+            }
+        } catch (\Throwable $th) {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => $th->getMessage()]);
+            exit;
+        }
+    }
+
+    public function validasiUbahAlasanKunjungan()
+    {
+        header('Content-Type: application/json');
+        $log = AppLogger::getLogger('UBAH-ALASAN-KUNJUNGAN');
+
+        try {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $log->info("<================= MULAI PROSES UNTUK UBAH-ALASAN-KUNJUNGAN =================>");
+                $log->info("<================= MULAI PROSES DI CONTROLLER validasiUbahAlasanKunjungan =================>");
+
+                $inputData = json_decode(file_get_contents('php://input'), true);
+
+                if (!$inputData) {
+                    throw new \Exception('Data input tidak valid (bukan JSON).');
+                }
+
+                $submittedToken = $inputData['csrf_token'] ?? '';
+                if (!$this->csrfTokenManager->isTokenValid(new CsrfToken('inputAlasanKunjunganBukuTamu', $submittedToken))) {
+                    $log->info("<================= TOKEN TIDAK VALID =================>");
+                    throw new \Exception('TOKEN TIDAK VALID');
+                    return;
+                }
+
+                $validasiNamaAlasanKunjungan = v::stringType()
+                    ->notEmpty()
+                    ->length(1, 50)
+                    ->regex('/^[a-zA-Z\s&]+$/u');
+
+                $namaInput = $inputData['ubah_nama_alasan_kunjungan'];
+                $log->info("Nama Sumber Informasi: $namaInput");
+
+                if (!$validasiNamaAlasanKunjungan->validate($namaInput)) {
+                    throw new \Exception('Nama Sumber Informasi mengandung karakter lain selain huruf.');
+                }
+
+                $result = $this->model('BukuTamuModels')->ubahAlasanKunjungan($inputData);
+
+                if ($result) {
+                    echo json_encode(['status' => 'success', 'message' => 'Data berhasil disimpan.']);
+                } else {
+                    echo json_encode(['status' => 'error', 'message' => 'Tidak ada perubahan data.']);
+                }
+            } else {
+                throw new \Exception('Metode request tidak valid di validasiUbahAlasanKunjungan');
+            }
+        } catch (\Throwable $th) {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => $th->getMessage()]);
+            exit;
         }
     }
 }

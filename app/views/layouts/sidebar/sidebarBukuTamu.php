@@ -43,6 +43,10 @@ $user = $_SESSION['user'] ?? null;
                                 </a>
                             </nav>
                         </div>
+                        <a class="nav-link" href="<?= BASEURL; ?>/bukutamu/alasan_kunjungan_buku_tamu">
+                            <div class="sb-nav-link-icon"><i class="fa-solid fa-folder"></i></div>
+                            Alasan Kunjungan
+                        </a>
 
                     </nav>
                 </div>

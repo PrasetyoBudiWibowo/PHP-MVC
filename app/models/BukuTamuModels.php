@@ -8,6 +8,7 @@ use Carbon\Carbon;
 
 use App\Models\SumberInformasiBukuTamu;
 use App\Models\SumberInformasiDetailBukuTamu;
+use App\Models\AlasanKunjunganBukuTamu;
 use App\Helper\DeviceHelper;
 use App\Helper\GeoDetector;
 use APp\Helper\AppLogger;
@@ -67,6 +68,26 @@ class BukuTamuModels
         return $prefix . $newNumber;
     }
 
+    private function generatedKdAlasanKunjunganBukuTamu()
+    {
+        $currentMonth = Carbon::now()->format('Ym');
+        $prefix = 'AKBT-' . $currentMonth . '-';
+
+        $lastAlasanKunjungan = AlasanKunjunganBukuTamu::where('kd_alasan_kunjungan_buku_tamu', 'LIKE', $prefix . '%')
+            ->orderBy('kd_alasan_kunjungan_buku_tamu', 'DESC')
+            ->first();
+
+        if (!$lastAlasanKunjungan) {
+            return $prefix . '0000';
+        }
+
+        $lastCode = $lastAlasanKunjungan->kd_alasan_kunjungan_buku_tamu;
+        $lastNumber = substr($lastCode, -4);
+
+        $newNumber = str_pad(intval($lastNumber) + 1, 4, '0', STR_PAD_LEFT);
+        return $prefix . $newNumber;
+    }
+
     public function getAllSumberInfromasi()
     {
         $data = SumberInformasiBukuTamu::all();
@@ -91,7 +112,12 @@ class BukuTamuModels
         });
 
         return $result;
+    }
 
+    public function getAllAlasanKunjungan()
+    {
+        $data = AlasanKunjunganBukuTamu::all();
+        return $data;
     }
 
     public function cekSumberInformasiByKode($kdSumberInforamsi)
@@ -273,6 +299,117 @@ class BukuTamuModels
         } catch (Exception $e) {
             Capsule::rollBack();
             throw new Exception("Gagal proses simpan ubahSumberInformasi: " . $e->getMessage());
+        }
+    }
+
+    public function simpanAlasanKunjungan($data)
+    {
+        Capsule::beginTransaction();
+        $log = AppLogger::getLogger('SIMPAN ALASAN KUNJUNGAN BUKU TAMU');
+
+        try {
+            $log->info("<================= MULAI PROSES SIMPAN DATA KE DATABASE =================>");
+            $log->info("Data dari controller: " . json_encode($data));
+
+            $cekNamaAlasanKunjungan = AlasanKunjunganBukuTamu::where('nama_alasan_kunjungan', $data['nama_alasan_kunjungan'])->first();
+
+            if ($cekNamaAlasanKunjungan) {
+                $log->error("Validasi gagal untuk input nama_alasan_kunjungan", [
+                    'invalid_input' => $cekNamaAlasanKunjungan,
+                    'expected_format' => 'NAMA ALASAN KUNJUNGAN SUDAH ADA'
+                ]);
+                throw new \Exception("NAMA ALASAN KUNJUNGAN DENGAN NAMA: \"{$data['nama_alasan_kunjungan']}\" SUDAH ADA");
+            }
+
+            $kd_alasan_kunjungan_buku_tamu = $this->generatedKdAlasanKunjunganBukuTamu();
+            $log->info("berhasil buat code PK");
+
+            $tgl_input = Carbon::now()->toDateString();
+            $bln_input = Carbon::now()->format('m');
+            $thn_input = Carbon::now()->year;
+            $waktu_input = Carbon::now()->setTimezone('Asia/Jakarta')->format('H:i');
+
+            $userAgent = $_SERVER['HTTP_USER_AGENT'];
+            $deviceInfo = DeviceHelper::detectDevice($userAgent);
+            $deviceType = $deviceInfo['deviceType'];
+            $device = $deviceInfo['browser'];
+
+            $ipDetector = GeoDetector::getDeviceLocation();
+            $ipDevice = isset($ipDetector['ip']) ? $ipDetector['ip'] : 'Unknown IP';
+
+            $alasaKunjungan = new AlasanKunjunganBukuTamu();
+            $alasaKunjungan->kd_alasan_kunjungan_buku_tamu = $kd_alasan_kunjungan_buku_tamu;
+            $alasaKunjungan->nama_alasan_kunjungan = $data['nama_alasan_kunjungan'];
+            $alasaKunjungan->tampil_buku_tamu = 'YA';
+            $alasaKunjungan->user_input = $data['kd_user'];
+            $alasaKunjungan->tgl_input = $tgl_input;
+            $alasaKunjungan->bln_input = $bln_input;
+            $alasaKunjungan->thn_input = $thn_input;
+            $alasaKunjungan->waktu_input = $waktu_input;
+            $alasaKunjungan->device = $device;
+            $alasaKunjungan->alamat_device = $ipDevice;
+            $alasaKunjungan->type_device = $deviceType;
+
+            $log->info("<================= PROSES SIMPAN DATA KE DATABASE BERHASIL =================>");
+            $alasaKunjungan->save();
+            $log->info("<================= DATA BERHASIL TERSIMPAN KE DATABASE =================>");
+
+            Capsule::commit();
+
+            return $alasaKunjungan;
+        } catch (\Throwable $th) {
+            Capsule::rollBack();
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => $th->getMessage()]);
+            exit;
+        }
+    }
+
+    public function ubahAlasanKunjungan($data)
+    {
+        Capsule::beginTransaction();
+        $log = AppLogger::getLogger('UBAH ALASAN KUNJUNGAN BUKU TAMU');
+
+        try {
+            $log->info("<================= MULAI PROSES UBAH DATA KE DATABASE =================>");
+            $log->info("Data dari controller: " . json_encode($data));
+
+            $cekNamaAlasanKunjungan = AlasanKunjunganBukuTamu::where('nama_alasan_kunjungan', $data['ubah_nama_alasan_kunjungan'])->first();
+
+            if ($cekNamaAlasanKunjungan) {
+                $log->error("Validasi gagal untuk input nama_alasan_kunjungan", [
+                    'invalid_input' => $data['ubah_nama_alasan_kunjungan'],
+                    'expected_format' => 'NAMA ALASAN KUNJUNGAN SUDAH ADA'
+                ]);
+
+                throw new \Exception("NAMA ALASAN KUNJUNGAN YANG INGIN DISIMPAN: \"{$data['ubah_nama_alasan_kunjungan']}\" " .
+                    "SAMA DENGAN NAMA YANG SUDAH ADA: \"{$cekNamaAlasanKunjungan->nama_alasan_kunjungan}\"");
+            }
+
+            $alasaKunjungan = AlasanKunjunganBukuTamu::find($data['kd_alasan_kunjungan_buku_tamu']);
+
+            if ($alasaKunjungan) {
+                $alasaKunjungan->update([
+                    'nama_alasan_kunjungan' => $data['ubah_nama_alasan_kunjungan'],
+                    'tampil_buku_tamu' => $data['tampil_buku_tamu']
+                ]);
+            } else {
+                $log->info("gagal proses ubah data di database");
+                throw new \Exception("Ubah data gagal.");
+            }
+
+            $log->info("data di database AlasanKunjunganBukuTamu berhasil di ubah");
+
+            Capsule::commit();
+            $log->info("proses ubah data di database berhasil di simpan");
+            $log->info("<========================== SELESAI ==========================>");
+
+            return $alasaKunjungan;
+        } catch (\Throwable $th) {
+            Capsule::rollBack();
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => $th->getMessage()]);
+            exit;
         }
     }
 }
