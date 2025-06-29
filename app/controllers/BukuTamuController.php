@@ -45,6 +45,17 @@ class BukuTamuController extends Controller
         $this->view('layouts/footer/footer');
     }
 
+    public function input_pengunjung()
+    {
+        $data['csrf_token'] = $this->csrfTokenManager->getToken('inputBukuTamu')->getValue();
+
+        $data['judul'] = 'Halaman Input Buku Tamu';
+        $this->view('layouts/header/header', $data);
+        $this->view('layouts/sidebar/sidebarBukuTamu');
+        $this->view('module/BUKUTAMU/inputPengunjung', $data);
+        $this->view('layouts/footer/footer');
+    }
+
     public function sumber_informasi_buku_tamu()
     {
         $data['csrf_token'] = $this->csrfTokenManager->getToken('inputSumberInfomasiBukutamu')->getValue();
@@ -443,6 +454,67 @@ class BukuTamuController extends Controller
                 }
             } else {
                 throw new \Exception('Metode request tidak valid di validasiUbahAlasanKunjungan');
+            }
+        } catch (\Throwable $th) {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => $th->getMessage()]);
+            exit;
+        }
+    }
+
+    public function validasiSimpanPengunjungBaru()
+    {
+        header('Content-Type: application/json');
+        $log = AppLogger::getLogger('SIMPAN-PENGUNJUNG-BARU-BUKU-TAMU');
+
+        try {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $log->info("<================= MULAI PROSES UNTUK UBAH-ALASAN-KUNJUNGAN =================>");
+                $log->info("<================= MULAI PROSES DI CONTROLLER validasiUbahAlasanKunjungan =================>");
+
+                $inputData = json_decode(file_get_contents('php://input'), true);
+
+                if (!$inputData) {
+                    throw new \Exception('Data input tidak valid (bukan JSON).');
+                }
+
+                $submittedToken = $inputData['csrf_token'] ?? '';
+                if (!$this->csrfTokenManager->isTokenValid(new CsrfToken('inputBukuTamu', $submittedToken))) {
+                    $log->info("<================= TOKEN TIDAK VALID =================>");
+                    throw new \Exception('TOKEN TIDAK VALID');
+                    return;
+                }
+
+                $validasiInput = v::stringType()
+                    ->notEmpty()
+                    ->length(1, 50)
+                    ->regex('/^[a-zA-Z\s&]+$/u');
+
+                $namaPengunjung = $inputData['nama_pengunjung'];
+                $log->info("Nama Pengunjung: $namaPengunjung");
+
+                if (!$validasiInput->validate($namaPengunjung)) {
+                    throw new \Exception("Nama Pengunjung: \"{$namaPengunjung}\" mengandung karakter lain selain huruf.");
+                }
+
+                $alasnKunjunganDetail = $inputData['alasan_kunjungan_detail'];
+
+                if (!empty($alasnKunjunganDetail)) {
+                    $log->info("Alasan Kunjungan Detail: $namaPengunjung");
+                    if (!$validasiInput->validate($alasnKunjunganDetail)) {
+                        throw new \Exception("Alasan Kunjungan Detail: \"{$alasnKunjunganDetail}\" mengandung karakter lain selain huruf.");
+                    }
+                }
+
+                $result = $this->model('BukuTamuModels')->simpanPengunjungBaruBukuTamu($inputData);
+
+                if ($result) {
+                    echo json_encode(['status' => 'success', 'message' => 'Data berhasil disimpan.']);
+                } else {
+                    echo json_encode(['status' => 'error', 'message' => 'Tidak ada perubahan data.']);
+                }
+            } else {
+                throw new \Exception('Metode request tidak valid di validasiSimpanPengunjungBaru');
             }
         } catch (\Throwable $th) {
             header('Content-Type: application/json');

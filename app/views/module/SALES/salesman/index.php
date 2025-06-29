@@ -150,7 +150,7 @@
             });
 
             getAllDataKaryawanNew(url).then(data => {
-                let filterData = data.filter((it) => it.kd_position === 'PST-202501-0003' && it.daftar_sales === 'TIDAK');
+                let filterData = data.filter((it) => it.kd_position === 'PST-202501-0003' && it.daftar_sales === 'TIDAK' && it.daftar_spv_sales === 'TIDAK');
                 filterSpv = data
                 loadSelectSales(filterData)
             }).catch(err => {

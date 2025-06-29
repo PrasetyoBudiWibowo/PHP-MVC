@@ -1,4 +1,3 @@
-<link href="../../../../css/bootstrap-4.4.1.css" rel="stylesheet" type="text/css">
 <div id="layoutSidenav_content">
     <main>
         <div class="container-fluid px-4 mb-3">
@@ -19,7 +18,8 @@
 
                         <div id="cardContent2" class="collapse">
                             <div class="card-body d-flex justify-content-center align-items-center">
-                                <i class="fa-solid fa-book-open fa-8x" id="input-new-customer" style="cursor: pointer;"></i>
+                                <img src="<?= BASEURL; ?>/img/tools/image-book1.png" alt="" id="input-customer" style="cursor: pointer; width: 300px; height: 300px;">
+                                <!-- <i class="fa-solid fa-book-open fa-8x" id="input-customer" style="cursor: pointer;"></i> -->
                             </div>
                         </div>
                     </div>
@@ -31,8 +31,8 @@
     <script>
         $(document).ready(function() {
 
-            $('#input-new-customer').css('cursor', 'pointer').on('click', function() {
-                window.location.href = `<?= BASEURL; ?>/bukutamu/input_new_pengunjung`;
+            $('#input-customer').css('cursor', 'pointer').on('click', function() {
+                window.location.href = `<?= BASEURL; ?>/bukutamu/input_pengunjung`;
             });
             // getAllDataKaryawan().then(data => {
             //     let jumlahKaryawan = data.length;

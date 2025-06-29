@@ -239,7 +239,7 @@
                 });
             });
 
-            fetchDataSumberInformasiDetail(url).then(data => {
+            getAllDataSumberInformasiDetail(url).then(data => {
                 loadDataSumberInformasiDetail(data);
             }).catch(err => {
                 Swal.fire({
@@ -309,7 +309,7 @@
                 let sumberInformasi = $('#filterSumberInformasi').val();
 
                 if (sumberInformasi) {
-                    fetchDataSumberInformasiDetail(url).then(data => {
+                    getAllDataSumberInformasiDetail(url).then(data => {
 
                         let filterData = data.filter(it => it.kd_sumber_informasi_buku_tamu === sumberInformasi);
                         $('#tblSumberInformasiBukutamu').DataTable().clear().destroy();
@@ -331,7 +331,7 @@
             });
 
             $('#btnReset').on('click', function() {
-                fetchDataSumberInformasiDetail(url).then(data => {
+                getAllDataSumberInformasiDetail(url).then(data => {
 
                     $('#filterSumberInformasi').val('')
                     $('#tblSumberInformasiBukutamu').DataTable().clear().destroy();
