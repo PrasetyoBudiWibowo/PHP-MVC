@@ -33,6 +33,27 @@ function validateInput(value, message) {
   return true;
 }
 
+function validasiBanyakInputan(inputs) {
+  let errors = [];
+
+  inputs.forEach(input => {
+    if (!input.value || input.value.trim() === "") {
+      errors.push(input.message);
+    }
+  });
+
+  if (errors.length > 0) {
+    Swal.fire({
+      icon: "warning",
+      title: "Inputan Ada yang Kurang",
+      html: `<div style="text-align: left; line-height: 1.4;">${errors.map(msg => `• ${msg}`).join('<br>')}</div>`,
+    });
+    return false;
+  }
+
+  return true;
+}
+
 function showConfirmationDialog(
   title,
   text,
@@ -269,12 +290,31 @@ function setLocaleIndonesia() {
   moment.locale("id");
 }
 
+function loadSelectOptions(selector, data, valueKey, textKey, defaultText = '-- PILIH OPSI --') {
+    const select = $(selector);
+    select.empty();
+    select.append(`<option value="" disabled selected>${defaultText}</option>`);
+
+    data.forEach(item => {
+        const value = getNestedValue(item, valueKey);
+        const text = getNestedValue(item, textKey) || 'TIDAK TERSEDIA';
+        select.append(`<option value="${value}">${text}</option>`);
+    });
+};
+
+const getNestedValue = (obj, path) => {
+    return path.split('.').reduce((acc, key) => {
+        return acc && acc[key] !== undefined ? acc[key] : '';
+    }, obj);
+};
+
 
 window.formatNumberIDR = formatNumberIDR;
 window.makeUppercase = makeUppercase;
 window.parseRp = parseRp;
 window.capitalizeEachWord = capitalizeEachWord;
 window.validateInput = validateInput;
+window.validasiBanyakInputan = validasiBanyakInputan;
 window.showConfirmationDialog = showConfirmationDialog;
 window.showLoadingAlert = showLoadingAlert;
 window.showAlert = showAlert;
@@ -282,3 +322,4 @@ window.defaultSelect2 = defaultSelect2;
 window.formatStringNumber = formatStringNumber;
 window.angkaTerbilang = angkaTerbilang;
 window.setLocaleIndonesia = setLocaleIndonesia;
+window.loadSelectOptions = loadSelectOptions;

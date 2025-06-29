@@ -72,7 +72,7 @@ async function getAllDataSumberInformasi(url) {
   }
 }
 
-async function fetchDataSumberInformasiDetail(url) {
+async function getAllDataSumberInformasiDetail(url) {
   try {
     const response = await fetch(
       `${url}/bukutamu/allDataSumberInformasiDetail`
@@ -203,11 +203,90 @@ async function getAllSales(url) {
   }
 }
 
+// provinsi
+async function getAllProvinsi(url) {
+  try {
+    const response = await fetch(`${url}/wilayah/allDataProvinsi`);
+    const result = await response.json();
+
+    if (result.status === "success") {
+      return result.data;
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: `Terjadi kesalahan pada server.`,
+      });
+      return [];
+    }
+  } catch (error) {
+    Swal.fire({
+      icon: "error",
+      title: "Gagal",
+      text: `Terjadi kesalahan ${error.message}.`,
+    });
+    return [];
+  }
+}
+
+async function getAllKotaKabupaten(url) {
+  try {
+    const response = await fetch(`${url}/wilayah/allDataKotaKabupaten`);
+    const result = await response.json();
+
+    if (result.status === "success") {
+      return result.data;
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: `Terjadi kesalahan pada server.`,
+      });
+      return [];
+    }
+  } catch (error) {
+    Swal.fire({
+      icon: "error",
+      title: "Gagal",
+      text: `Terjadi kesalahan ${error.message}.`,
+    });
+    return [];
+  }
+}
+
+async function getAllKecamatan(url) {
+  try {
+    const response = await fetch(`${url}/wilayah/allDataKecamatan`);
+    const result = await response.json();
+
+    if (result.status === "success") {
+      return result.data;
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: `Terjadi kesalahan pada server.`,
+      });
+      return [];
+    }
+  } catch (error) {
+    Swal.fire({
+      icon: "error",
+      title: "Gagal",
+      text: `Terjadi kesalahan ${error.message}.`,
+    });
+    return [];
+  }
+}
+
 window.getAllDataKaryawan = getAllDataKaryawan;
 window.getAllDataKaryawanNew = getAllDataKaryawanNew;
 window.getAllDataSumberInformasi = getAllDataSumberInformasi;
-window.fetchDataSumberInformasiDetail = fetchDataSumberInformasiDetail;
+window.getAllDataSumberInformasiDetail = getAllDataSumberInformasiDetail;
 window.getAllAlasanKunjunganBukuTamu = getAllAlasanKunjunganBukuTamu;
 window.getAllPosisiton = getAllPosisiton;
 window.getAllSpvSales = getAllSpvSales;
 window.getAllSales = getAllSales;
+window.getAllProvinsi = getAllProvinsi;
+window.getAllKotaKabupaten = getAllKotaKabupaten;
+window.getAllKecamatan = getAllKecamatan;
