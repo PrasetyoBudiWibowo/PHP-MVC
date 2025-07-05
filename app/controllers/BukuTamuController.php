@@ -89,6 +89,15 @@ class BukuTamuController extends Controller
         $this->view('layouts/footer/footer');
     }
 
+    public function fake_pengunjung()
+    {
+        $data['judul'] = 'Halaman Input Buku Tamu';
+        $this->view('layouts/header/header', $data);
+        $this->view('layouts/sidebar/sidebarBukuTamu');
+        $this->view('module/BUKUTAMU/dummy/index', $data);
+        $this->view('layouts/footer/footer');
+    }
+
     public function allDataSumberInformasi()
     {
         $sumberInformasi = $this->model('BukuTamuModels')->getAllSumberInfromasi();

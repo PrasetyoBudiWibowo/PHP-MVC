@@ -576,4 +576,153 @@ class BukuTamuModels
             exit;
         }
     }
+
+
+    // data dummy
+    public function simpanDummyPengunjungBukuTamu($data)
+    {
+        Capsule::beginTransaction();
+        $log = AppLogger::getLogger('SIMPAN DUMMY KUNJUNGAN BUKU TAMU');
+
+        try {
+            $log->info("<================= MULAI PROSES SIMPAN DATA KE DATABASE =================>");
+            $log->info("Data dari controller::");
+
+
+            $tgl_input = Carbon::now()->toDateString();
+            $bln_input = Carbon::now()->format('m');
+            $thn_input = Carbon::now()->year;
+            $waktu_input = Carbon::now()->setTimezone('Asia/Jakarta')->format('H:i');
+
+            $userAgent = $_SERVER['HTTP_USER_AGENT'];
+            $deviceInfo = DeviceHelper::detectDevice($userAgent);
+            $deviceType = $deviceInfo['deviceType'];
+            $device = $deviceInfo['browser'];
+
+            $ipDetector = GeoDetector::getDeviceLocation();
+            $ipDevice = isset($ipDetector['ip']) ? $ipDetector['ip'] : 'Unknown IP';
+
+            $simpanDummyKunjunganBukuTamu = [];
+
+            foreach ($data as $d) {
+                $cekProvinsi = Provinsi::find($d['kd_provinsi']);
+                $cekKotaKabupaten = KotaKabupaten::find($d['kd_kota_kabupaten']);
+
+                if (!$cekProvinsi) {
+                    $log->error("Validasi gagal untuk Provinsi", [
+                        'invalid_input' => 'PROVINSI',
+                        'expected_format' => 'PROVINSI TIDAK DITEMUKAN'
+                    ]);
+
+                    throw new \Exception("PROVINSI TIDAK DITEMUKAN");
+                }
+
+                if (!$cekKotaKabupaten) {
+                    $log->error("Validasi gagal untuk KotaKabupaten", [
+                        'invalid_input' => 'KOTA / KABUPATEN',
+                        'expected_format' => 'KOTA / KABUPATEN TIDAK DITEMUKAN'
+                    ]);
+
+                    throw new \Exception("KOTA / KABUPATEN TIDAK DITEMUKAN");
+                }
+
+                if (!empty($d['kd_kecamatan'])) {
+                    $cekKecamatan = Kecamatan::find($d['kd_kecamatan']);
+
+                    if (!$cekKecamatan) {
+                        $log->error("Validasi gagal untuk Kecamatan", [
+                            'invalid_input' => 'KECAMATAN',
+                            'expected_format' => 'KECAMATAN TIDAK DITEMUKAN'
+                        ]);
+
+                        throw new \Exception("KECAMATAN TIDAK DITEMUKAN");
+                    }
+                }
+
+                $cekAlasanKunjungan = AlasanKunjunganBukuTamu::find($d['kd_alasan_kunjungan_buku_tamu']);
+
+                if (!$cekAlasanKunjungan) {
+                    $log->error("Validasi gagal untuk AlasanKunjunganBukuTamu", [
+                        'invalid_input' => 'ALASAN KUNJUNGAN',
+                        'expected_format' => 'ALASAN KUNJUNGAN TIDAK DITEMUKAN'
+                    ]);
+
+                    throw new \Exception("ALASAN KUNJUNGAN TIDAK DITEMUKAN");
+                }
+
+                if (!empty($d['kd_sumber_informasi_buku_tamu'])) {
+
+                    $cekSumberInformasi = SumberInformasiBukuTamu::find($d['kd_sumber_informasi_buku_tamu']);
+
+                    if (!$cekSumberInformasi) {
+                        $log->error("Validasi gagal untuk SumberInformasiBukuTamu", [
+                            'invalid_input' => 'SUMBER INFORMASI',
+                            'expected_format' => 'SUMBER INFORMASI TIDAK DITEMUKAN'
+                        ]);
+
+                        throw new \Exception("SUMBER INFORMASI TIDAK DITEMUKAN");
+                    }
+                }
+
+                if (!empty($d['kd_sumber_informasi_detail_buku_tamu'])) {
+
+                    $cekSumberInformasiDetail = SumberInformasiDetailBukuTamu::find($d['kd_sumber_informasi_detail_buku_tamu']);
+
+                    if (!$cekSumberInformasiDetail) {
+                        $log->error("Validasi gagal untuk input SumberInformasiDetailBukuTamu", [
+                            'invalid_input' => 'SUMBER INFORMASI DETAIL',
+                            'expected_format' => 'SUMBER INFORMASI DETAIL TIDAK DITEMUKAN'
+                        ]);
+
+                        throw new \Exception("SUMBER INFORMASI DETAIL TIDAK DITEMUKAN");
+                    }
+                }
+
+                $kd_buku_tamu = $this->generateKdBukuTamu();
+
+                $kunjunganBaruBukutamu = new BukuTamu();
+                $kunjunganBaruBukutamu->kd_buku_tamu = $kd_buku_tamu;
+                $kunjunganBaruBukutamu->nama_pengunjung = $d['nama_pengunjung'];
+                $kunjunganBaruBukutamu->kd_master_sales = $d['kd_master_sales'];
+                $kunjunganBaruBukutamu->status_kunjungan = "BARU";
+                $kunjunganBaruBukutamu->kd_provinsi = $d['kd_provinsi'];
+                $kunjunganBaruBukutamu->kd_kota_kabupaten = $d['kd_kota_kabupaten'];
+                $kunjunganBaruBukutamu->kd_kecamatan = $d['kd_kecamatan'];
+                $kunjunganBaruBukutamu->kd_alasan_kunjungan_buku_tamu = $d['kd_alasan_kunjungan_buku_tamu'];
+                $kunjunganBaruBukutamu->kd_sumber_informasi_buku_tamu = $d['kd_sumber_informasi_buku_tamu'];
+                $kunjunganBaruBukutamu->kd_sumber_informasi_detail_buku_tamu = $d['kd_sumber_informasi_detail_buku_tamu'];
+                $kunjunganBaruBukutamu->tgl_kunjungan = $d['tgl_kunjungan'];
+                $kunjunganBaruBukutamu->bln_kunjungan = $d['bln_kunjungan'];
+                $kunjunganBaruBukutamu->thn_kunjungan = $d['thn_kunjungan'];
+                $kunjunganBaruBukutamu->waktu_kunjungan = $d['waktu_kunjungan'];
+                $kunjunganBaruBukutamu->user_input = $d['kd_user'];
+                $kunjunganBaruBukutamu->tgl_input = $tgl_input;
+                $kunjunganBaruBukutamu->bln_input = $bln_input;
+                $kunjunganBaruBukutamu->thn_input = $thn_input;
+                $kunjunganBaruBukutamu->waktu_input = $waktu_input;
+                $kunjunganBaruBukutamu->device = $device;
+                $kunjunganBaruBukutamu->alamat_device = $ipDevice;
+                $kunjunganBaruBukutamu->type_device = $deviceType;
+
+                $kunjunganBaruBukutamu->save();
+
+                if (!$kunjunganBaruBukutamu) {
+                    throw new Exception("Gagal simpan karyawan.");
+                }
+
+                $simpanDummyKunjunganBukuTamu[] = $kunjunganBaruBukutamu;
+            }
+
+            $log->info("<================= PROSES SIMPAN DATA KE DATABASE BERHASIL =================>");
+            $log->info("<================= DATA BERHASIL TERSIMPAN KE DATABASE =================>");
+
+            Capsule::commit();
+            return $simpanDummyKunjunganBukuTamu;
+        } catch (\Throwable $th) {
+            Capsule::rollBack();
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => $th->getMessage()]);
+            exit;
+        }
+    }
 }

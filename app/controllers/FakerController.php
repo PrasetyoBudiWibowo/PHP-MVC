@@ -5,6 +5,9 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Middleware\AuthMiddleware;
 use Faker\Factory as Faker;
+use Carbon\Carbon;
+
+use App\Helper\AppLogger;
 
 class FakerController extends Controller
 {
@@ -199,6 +202,168 @@ class FakerController extends Controller
             }
         } catch (\Exception $e) {
             echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+        }
+    }
+
+    public function generateFakePengunjungBukuTamu()
+    {
+        header('Content-Type: application/json');
+        $log = AppLogger::getLogger('GENERATE-DATA-DUMMY-BUKU-TAMU');
+
+        try {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $inputData = json_decode(file_get_contents('php://input'), true);
+
+                if (!$inputData) {
+                    throw new \Exception('Data input tidak valid (bukan JSON).');
+                }
+
+                $jumlahData = intval($inputData['jumlah_data'] ?? 0);
+                if ($jumlahData <= 0) {
+                    throw new \Exception('Jumlah data harus lebih dari nol.');
+                }
+
+                $tahunAwal = intval($inputData['tahun_awal'] ?? 0);
+                $tahunAkhir = intval($inputData['tahun_akhir'] ?? 0);
+
+                $carbonAwal = Carbon::createFromDate($tahunAwal, 1, 1);
+                $carbonAkhir = Carbon::createFromDate($tahunAkhir, 12, 31);
+
+                if ($carbonAwal->gt($carbonAkhir)) {
+                    throw new \Exception('Tahun Awal tidak boleh lebih besar dari Tahun Akhir.');
+                }
+
+                $faker = Faker::create('id_ID');
+
+                // Ambil data
+                $dataWilayah = $this->model('WilayahModels')->allKecamatanWithKabKotaWithProvinsi();
+                $dataSales = $this->model('SalesModels')->getAllSales();
+                $dataAlasanKunjungan = $this->model('BukuTamuModels')->getAllAlasanKunjungan();
+                $dataSumberInformasiDetail = $this->model('BukuTamuModels')->getAllSumberInformasiDetail();
+
+                // Filter alasan kunjungan
+                $filteredAlasanKunjungan = $dataAlasanKunjungan->filter(function ($item) {
+                    return $item['kd_alasan_kunjungan_buku_tamu'] !== "AKBT-202506-0007";
+                })->values();
+
+                if ($filteredAlasanKunjungan->isEmpty()) {
+                    throw new \Exception('Tidak ada alasan kunjungan yang valid.');
+                }
+
+                $dataFake = [];
+
+                for ($i = 0; $i < $jumlahData; $i++) {
+                    $jumlahKata = rand(2, 5);
+
+                    $namaLengkapArray = [$faker->firstName];
+                    for ($j = 1; $j < $jumlahKata - 1; $j++) {
+                        $namaLengkapArray[] = $faker->firstName;
+                    }
+                    $namaLengkapArray[] = $faker->lastName;
+
+                    $namaLengkap = implode(' ', $namaLengkapArray);
+
+                    $alasanRandom = $filteredAlasanKunjungan->random();
+                    $salesRandom = $dataSales->random();
+                    $wilayahRandom = $dataWilayah->random();
+                    $sumberInformasiDetailRandom = $dataSumberInformasiDetail->random();
+
+                    $tglKunjungan = $faker->dateTimeBetween(
+                        $carbonAwal->format('Y-m-d'),
+                        $carbonAkhir->format('Y-m-d')
+                    )->format('Y-m-d');
+
+                    $jamRandom = $faker->numberBetween(9, 19);
+                    $menitRandom = $faker->numberBetween(0, 59);
+                    $waktuKunjungan = Carbon::createFromTime($jamRandom, $menitRandom)->format('H:i');
+
+                    $dataFake[] = [
+                        'nama_pengunjung' => $namaLengkap,
+                        'kd_alasan_kunjungan_buku_tamu' => $alasanRandom['kd_alasan_kunjungan_buku_tamu'],
+                        'nama_alasan_kunjungan' => $alasanRandom['nama_alasan_kunjungan'],
+                        'tgl_kunjungan' => $tglKunjungan,
+                        'waktu_kunjungan' => $waktuKunjungan,
+                        'kd_master_sales' => $salesRandom['kd_master_sales'],
+                        'nama_sales' => $salesRandom['karyawan']['nama_karyawan'] ?? 'N/A',
+                        'kd_provinsi' => $wilayahRandom['kota_kabupaten']['kd_provinsi'],
+                        'nama_provinsi' => $wilayahRandom['kota_kabupaten']['provinsi']['nama_provinsi'],
+                        'kd_kota_kabupaten' => $wilayahRandom['kota_kabupaten']['kd_kota_kabupaten'],
+                        'nama_kota_kabupaten' => $wilayahRandom['kota_kabupaten']['nama_kota_kabupaten'],
+                        'kd_kecamatan' => $wilayahRandom['kd_kecamatan'],
+                        'nama_kecamatan' => $wilayahRandom['nama_kecamatan'],
+                        'kd_sumber_informasi_detail_buku_tamu' => $sumberInformasiDetailRandom['kd_sumber_informasi_detail_buku_tamu'],
+                        'nm_sumber_informasi_detail' => $sumberInformasiDetailRandom['nm_sumber_informasi_detail'],
+                        'kd_sumber_informasi_buku_tamu' => $sumberInformasiDetailRandom['kd_sumber_informasi_buku_tamu'],
+                        'nm_sumber_informasi' => $sumberInformasiDetailRandom['sumber_informasi']['nm_sumber_informasi'],
+                    ];
+                }
+
+                echo json_encode(['status' => 'success', 'message' => 'Berhasil buat data fake.', 'data' => $dataFake]);
+            } else {
+                throw new \Exception('Metode request tidak valid di generateFakePengunjungBukuTamu');
+            }
+        } catch (\Throwable $th) {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => $th->getMessage()]);
+            exit;
+        }
+    }
+
+    public function simpanDataFakeKunjunganBukuTamu()
+    {
+        header('Content-Type: application/json');
+        $log = AppLogger::getLogger('SIMPAN DATA FAKE KUNJUNGAN BUKU TAMU');
+
+        try {
+            if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+                $log->info("<================= MULAI PROSES UNTUK SIMPAN DATA FAKE KUNJUNGAN BUKU TAMU =================>");
+                $log->info("<================= MULAI PROSES DI CONTROLLER simpanDataFakeKunjunganBukuTamu =================>");
+
+                $inputData = json_decode(file_get_contents('php://input'), true);
+
+                if (!$inputData) {
+                    throw new \Exception('Data input tidak valid (bukan JSON).');
+                }
+
+                if (empty($inputData['data']) || !is_array($inputData['data'])) {
+                    throw new \Exception('Data kosong tidak ada data yang dikirim.');
+                    return;
+                }
+
+                $dataSave = [];
+
+                foreach ($inputData['data'] as $d) {
+                    $dataSave[] = [
+                        'nama_pengunjung' => $d['nama_pengunjung'],
+                        'kd_master_sales' => $d['kd_master_sales'],
+                        'kd_provinsi' => $d['kd_provinsi'],
+                        'kd_kota_kabupaten' => $d['kd_kota_kabupaten'],
+                        'kd_kecamatan' => $d['kd_kecamatan'],
+                        'kd_alasan_kunjungan_buku_tamu' => $d['kd_alasan_kunjungan_buku_tamu'],
+                        'kd_sumber_informasi_buku_tamu' => $d['kd_sumber_informasi_buku_tamu'],
+                        'kd_sumber_informasi_detail_buku_tamu' => $d['kd_sumber_informasi_detail_buku_tamu'],
+                        'tgl_kunjungan' => $d['tgl_kunjungan'],
+                        'bln_kunjungan' => $d['bln_kunjungan'],
+                        'thn_kunjungan' => $d['thn_kunjungan'],
+                        'waktu_kunjungan' => $d['waktu_kunjungan'],
+                        'kd_user' => $d['kd_user'],
+                    ];
+                }
+
+                $result = $this->model('BukuTamuModels')->simpanDummyPengunjungBukuTamu($dataSave);
+
+                if ($result) {
+                    echo json_encode(['status' => 'success', 'message' => 'Data Berhasil Ditambahkan.']);
+                } else {
+                    echo json_encode(['status' => 'error', 'message' => 'Tidak ada perubahan data user.']);
+                }
+            } else {
+                throw new \Exception('Metode request tidak valid di simpanDataFakeKunjunganBukuTamu');
+            }
+        } catch (\Throwable $th) {
+            header('Content-Type: application/json');
+            echo json_encode(['status' => 'error', 'message' => $th->getMessage()]);
+            exit;
         }
     }
 }

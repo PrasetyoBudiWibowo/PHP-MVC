@@ -9,32 +9,40 @@
     <meta name="author" content="" />
     <title><?= $data['judul']; ?></title>
 
-    <!-- Link -->
-    <link href="<?= BASEURL; ?>/css/styles.css" rel="stylesheet" />
-    <!-- <link href="<?= BASEURL; ?>/css/select2.min.css" rel="stylesheet" /> -->
-    <link href="<?= BASEURL; ?>/css/bootstrap.min.css" rel="stylesheet">
-    <link href="<?= BASEURL; ?>/js/DataTables/dataTables.min.css" rel="stylesheet" />
+    <!-- ✅ Bootstrap CSS (lebih dulu dari DataTables agar bisa di-override dengan benar) -->
+    <link href="<?= BASEURL; ?>/css/Bootstrap.min.css" rel="stylesheet">
+
+    <!-- ✅ DataTables Core & Extensions CSS -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.5/css/jquery.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css" />
+    <link rel="stylesheet" href="https://cdn.datatables.net/fixedheader/3.3.2/css/fixedHeader.dataTables.min.css" />
+
+    <!-- ✅ Komponen UI lainnya -->
     <link href="<?= BASEURL; ?>/js/select2/dist/css/select2.min.css" rel="stylesheet" />
     <link href="<?= BASEURL; ?>/css/sweetalert2.min.css" rel="stylesheet" />
     <link href="<?= BASEURL; ?>/js/bootstrap-datepicker/css/bootstrap-datepicker.min.css" rel="stylesheet" />
 
-    <!-- Stylesheets -->
+    <!-- ✅ Custom CSS di paling akhir agar bisa override semuanya -->
+    <link href="<?= BASEURL; ?>/css/styles.css" rel="stylesheet" />
+
+    <!-- ✅ jQuery (HARUS sebelum DataTables) -->
     <script src="<?= BASEURL; ?>/js/jquery-3.6.0.min.js"></script>
+
+    <!-- ✅ Bootstrap JS -->
     <script src="<?= BASEURL; ?>/js/all.js" crossorigin="anonymous"></script>
-    <link href="<?= BASEURL; ?>/js/bootstrap-datepicker/js/bootstrap-datepicker.min.js" rel="stylesheet" />
-    <!-- <script src="<?= BASEURL; ?>/js/jquery-3.7.0.min.js"></script> -->
+
+    <!-- ✅ DataTables Core & Extensions JS -->
+    <script src="https://cdn.datatables.net/1.13.5/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
+    <script src="https://cdn.datatables.net/fixedheader/3.3.2/js/dataTables.fixedHeader.min.js"></script>
+
+    <!-- ✅ Komponen tambahan -->
+    <script src="<?= BASEURL; ?>/js/moment.js"></script>
     <script src="<?= BASEURL; ?>/js/sweetalert2.all.js"></script>
     <script src="<?= BASEURL; ?>/js/sweetalert2.min.js"></script>
-    <!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/moment.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.30.1/locale/id.min.js"></script> -->
-    
-    <script src="<?= BASEURL; ?>/js/dataTables.js"></script>
-    <script src="<?= BASEURL; ?>/js/moment.js"></script>
-    <!-- <script src="<?= BASEURL; ?>/js/id.min.js"></script> -->
     <script src="<?= BASEURL; ?>/js/xlsx.full.min.js"></script>
-    <script type="text/javascript" src="<?= BASEURL; ?>/js/helper/helper.js"></script>
-    <script type="text/javascript" src="<?= BASEURL; ?>/js/helper/API.js"></script>
-    <!-- <script src="<?= BASEURL; ?>/js/select2.min.js"></script> -->
+    <script src="<?= BASEURL; ?>/js/helper/helper.js"></script>
+    <script src="<?= BASEURL; ?>/js/helper/API.js"></script>
     <script src="<?= BASEURL; ?>/js/select2/dist/js/select2.min.js"></script>
     <script src="<?= BASEURL; ?>/js/bootstrap-datepicker-1.9.0-dist/js/bootstrap-datepicker.min.js"></script>
     <script src="<?= BASEURL; ?>/js/Highcharts-11.4.8/code/highcharts.js"></script>

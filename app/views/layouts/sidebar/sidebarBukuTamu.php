@@ -50,6 +50,20 @@ $user = $_SESSION['user'] ?? null;
 
                     </nav>
                 </div>
+
+                <!-- MENU FAKER -->
+                <a class="nav-link collapsed" href="#" data-bs-toggle="collapse" data-bs-target="#collapseTestMenuHrd"
+                    aria-expanded="false" aria-controls="collapseTestMenuHrd">
+                    <div class="sb-nav-link-icon"><i class="fa-solid fa-bars"></i></div>
+                    Test
+                    <div class="sb-sidenav-collapse-arrow"><i class="fas fa-angle-down"></i></div>
+                </a>
+                <div class="collapse" id="collapseTestMenuHrd" aria-labelledby="headingOne"
+                    data-bs-parent="#sidenavAccordion">
+                    <nav class="sb-sidenav-menu-nested nav">
+                        <a class="nav-link" href="<?= BASEURL; ?>/bukutamu/fake_pengunjung">Data Dummy Buku Tamu</a>
+                    </nav>
+                </div>
                 <a class="nav-link" href="#" id="ubahDataByUser">
                     <div class="sb-nav-link-icon"><i class="fa-solid fa-pen-to-square"></i></div>
                     Ubah Data

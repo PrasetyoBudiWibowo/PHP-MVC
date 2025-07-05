@@ -308,6 +308,40 @@ const getNestedValue = (obj, path) => {
     }, obj);
 };
 
+function getSemuaBulan() {
+  moment.locale('id');
+
+  const semuaBulan = [];
+
+  for (let i = 0; i < 12; i++) {
+    const bulan = moment().month(i);
+
+    semuaBulan.push({
+      nama_bulan: bulan.format('MMMM'),
+      bln_dlm_angka: bulan.format('MM')
+    });
+  }
+
+  return semuaBulan;
+}
+
+function getTahun(startYear, endYear) {
+  const daftarTahun = [];
+
+  
+  for (let year = startYear; year <= endYear; year++) {
+    daftarTahun.push({ tahun: moment().year(year).format('YYYY') });
+  }
+
+  return daftarTahun;
+}
+
+function formatNumber(value) {
+  value = value.replace(/[^\d]/g, ''); // hanya angka
+  if (value === '') return '';
+  return value.replace(/\B(?=(\d{3})+(?!\d))/g, '.'); // format ribuan
+}
+
 
 window.formatNumberIDR = formatNumberIDR;
 window.makeUppercase = makeUppercase;
@@ -323,3 +357,6 @@ window.formatStringNumber = formatStringNumber;
 window.angkaTerbilang = angkaTerbilang;
 window.setLocaleIndonesia = setLocaleIndonesia;
 window.loadSelectOptions = loadSelectOptions;
+window.getSemuaBulan = getSemuaBulan;
+window.getTahun = getTahun;
+window.formatNumber = formatNumber;
