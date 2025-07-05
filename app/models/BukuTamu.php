@@ -19,7 +19,7 @@ class BukuTamu extends Model
         'nama_pengunjung',
         'kd_alasan_kunjungan_buku_tamu',
         'alasan_kunjungan_detail',
-        'kd_sales',
+        'kd_master_sales',
         'kd_provinsi',
         'kd_kota_kabupaten',
         'kd_kecamatan',

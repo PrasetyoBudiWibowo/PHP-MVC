@@ -538,6 +538,7 @@ class BukuTamuModels
             $kunjunganBaruBukutamu = new BukuTamu();
             $kunjunganBaruBukutamu->kd_buku_tamu = $kd_buku_tamu;
             $kunjunganBaruBukutamu->nama_pengunjung = $data['nama_pengunjung'];
+            $kunjunganBaruBukutamu->kd_master_sales = $data['kd_master_sales'];
             $kunjunganBaruBukutamu->status_kunjungan = "BARU";
             $kunjunganBaruBukutamu->kd_provinsi = $data['kd_provinsi'];
             $kunjunganBaruBukutamu->kd_kota_kabupaten = $data['kd_kota_kabupaten'];

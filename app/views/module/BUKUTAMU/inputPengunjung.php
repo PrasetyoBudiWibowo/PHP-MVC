@@ -213,6 +213,7 @@
             let dataToSave = {
                 csrf_token: csrfToken,
                 nama_pengunjung: namaPengunjung,
+                kd_master_sales: kdMasterSales,
                 kd_provinsi: kdProvinsi,
                 kd_kota_kabupaten: kdKabupaten,
                 kd_kecamatan: kdKecamatan,
