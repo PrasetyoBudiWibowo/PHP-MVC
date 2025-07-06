@@ -163,11 +163,15 @@ class BukuTamuModels
                 'status_kunjungan' => $d->status_kunjungan,
                 'kd_alasan_kunjungan_buku_tamu' => $d->kd_alasan_kunjungan_buku_tamu,
                 'kd_sumber_informasi_buku_tamu' => $d->kd_sumber_informasi_buku_tamu,
+                'kd_sumber_informasi_detail_buku_tamu' => $d->kd_sumber_informasi_detail_buku_tamu,
                 'tgl_kunjungan' => $d->tgl_kunjungan,
                 'bln_kunjungan' => $d->bln_kunjungan,
                 'thn_kunjungan' => $d->thn_kunjungan,
                 'waktu_kunjungan' => $d->waktu_kunjungan,
                 'kd_master_sales' => $d->kd_master_sales,
+                'kd_provinsi' => $d->kd_provinsi,
+                'kd_kota_kabupaten' => $d->kd_kota_kabupaten,
+                'kd_kecamatan' => $d->kd_kecamatan,
                 'sales' => [
                     'kd_karyawan' => $d->sales->kd_karyawan,
                     'karyawan' => [
@@ -180,6 +184,21 @@ class BukuTamuModels
                 ],
                 'sumber_informasi' => [
                     'nm_sumber_informasi' => $d->sumber_informasi_buku_tamu->nm_sumber_informasi ?? null
+                ],
+                'provinsi' => [
+                    'nama_provinsi' => $d->provinsi->nama_provinsi,
+                ],
+                'kota_kabupaten' => [
+                    'nama_kota_kabupaten' => $d->kota_kabupaten->nama_kota_kabupaten ?? null,
+                ],
+                'kecamatan' => [
+                    'nama_kecamatan' => $d->kecamatan->nama_kecamatan ?? null,
+                ],
+                'sumber_informasi_buku_tamu' => [
+                    'nm_sumber_informasi' => $d->sumber_informasi_buku_tamu->nm_sumber_informasi ?? null,
+                ],
+                'sumber_informasi_detail_buku_tamu' => [
+                    'nm_sumber_informasi_detail' => $d->sumber_informasi_detail_buku_tamu->nm_sumber_informasi_detail ?? null,
                 ],
             ];
         });

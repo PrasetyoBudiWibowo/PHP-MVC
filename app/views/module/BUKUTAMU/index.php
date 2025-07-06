@@ -80,6 +80,40 @@
                     </div>
                 </div>
             </div>
+
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header text-center">
+                            <strong>WILAYAH PENGUNJUNG</strong>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-4">
+                                    <select class="form-control" id="filter_by_wilayah" name="filter_by_wilayah">
+                                        <option value="">-- Pilih Tahun --</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-6">
+                                    <div class="col-12" id="kunjungan_by_provinsi_per_bln_tahun"></div>
+                                </div>
+
+                                <div class="col-6">
+                                    <div class="col-12" id="kunjungan_by_kota_kabupaten_per_bln_tahun"></div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-6" id="kunjungan_by_kecamatan_per_bln_tahun"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </main>
     <script>
@@ -101,6 +135,9 @@
                 loadKunjunganPerTahun(data)
                 loadAlasanKunjungan(data)
                 loadFilterTahun(dataTahun)
+                loadProvinsiKunjungan(data)
+                loadKotaKabupatenKunjungan(data)
+                loadKecamatanKunjungan(data)
             }).catch(err => {
                 Swal.fire({
                     icon: 'error',
@@ -115,6 +152,7 @@
 
             defaultSelect2('#tahun_kunjungan', '-- Pilih Tahun --')
             defaultSelect2('#filter_alasan_kunjungan', '-- Pilih Tahun --')
+            defaultSelect2('#filter_by_wilayah', '-- Pilih Tahun --')
 
             $('#tahun_kunjungan').on('change', function() {
                 let tahun = $('#tahun_kunjungan').val();
@@ -139,11 +177,28 @@
                     loadAlasanKunjungan(data)
                 }
             })
+
+            $('#filter_by_wilayah').on('change', function() {
+                let tahun = $('#filter_by_wilayah').val();
+
+                if (tahun) {
+                    let filterKunjungan = dataKunjunaganBukuTamuPerTahun.filter((it) => it.thn_kunjungan === tahun)
+                    loadProvinsiKunjungan(filterKunjungan)
+                    loadKotaKabupatenKunjungan(filterKunjungan)
+                    loadKecamatanKunjungan(filterKunjungan)
+                } else {
+                    let data = []
+                    loadProvinsiKunjungan(data)
+                    loadKotaKabupatenKunjungan(data)
+                    loadKecamatanKunjungan(data)
+                }
+            })
         })
 
         const loadFilterTahun = (data) => {
             loadSelectOptions('#tahun_kunjungan', data, 'tahun', 'tahun', '-- Pilih Tahun --')
             loadSelectOptions('#filter_alasan_kunjungan', data, 'tahun', 'tahun', '-- Pilih Tahun --')
+            loadSelectOptions('#filter_by_wilayah', data, 'tahun', 'tahun', '-- Pilih Tahun --')
         }
 
         const loadAllKunjungan = (data) => {
@@ -261,7 +316,7 @@
                 };
             });
 
-            
+
 
             const totalKunjungan = dataTahun.length;
 
@@ -301,5 +356,224 @@
                 },
                 series: seriesData
             });
-        };
+        }
+
+        const loadProvinsiKunjungan = (data) => {
+            const tahun = $('#filter_by_wilayah').val();
+
+            if (!tahun) {
+                Highcharts.chart('kunjungan_by_provinsi_per_bln_tahun', {
+                    chart: {
+                        type: 'pie'
+                    },
+                    title: {
+                        text: 'Pilih Tahun untuk Menampilkan Data'
+                    },
+                    series: [{
+                        name: 'Kunjungan',
+                        data: []
+                    }],
+                    xAxis: {
+                        categories: []
+                    },
+                    yAxis: {
+                        title: {
+                            text: ''
+                        }
+                    }
+                });
+                return;
+            }
+
+            const dataTahun = data.filter(item => item.thn_kunjungan === tahun);
+
+            const kunjunganProvinsi = {};
+            dataTahun.forEach(item => {
+                const namaProvinsi = item.provinsi?.nama_provinsi || 'Tidak Diketahui';
+                kunjunganProvinsi[namaProvinsi] = (kunjunganProvinsi[namaProvinsi] || 0) + 1;
+            });
+
+            const seriesData = Object.entries(kunjunganProvinsi).map(([nama, total]) => ({
+                name: `${nama} (${total})`,
+                y: total
+            }));
+
+            Highcharts.chart('kunjungan_by_provinsi_per_bln_tahun', {
+                chart: {
+                    type: 'pie'
+                },
+                title: {
+                    text: `Distribusi Kunjungan Berdasarkan Provinsi - Tahun ${tahun}`
+                },
+                tooltip: {
+                    pointFormat: '{series.name}: <b>{point.y} kunjungan</b>'
+                },
+                accessibility: {
+                    point: {
+                        valueSuffix: ' kunjungan'
+                    }
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            enabled: true,
+                            format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Kunjungan',
+                    colorByPoint: true,
+                    data: seriesData
+                }]
+            });
+        }
+
+        const loadKotaKabupatenKunjungan = (data) => {
+            const tahun = $('#filter_by_wilayah').val();
+
+            if (!tahun) {
+                Highcharts.chart('kunjungan_by_kota_kabupaten_per_bln_tahun', {
+                    chart: {
+                        type: 'pie'
+                    },
+                    title: {
+                        text: 'Pilih Tahun untuk Menampilkan Data'
+                    },
+                    series: [{
+                        name: 'Kunjungan',
+                        data: []
+                    }],
+                    xAxis: {
+                        categories: []
+                    },
+                    yAxis: {
+                        title: {
+                            text: ''
+                        }
+                    }
+                });
+                return;
+            }
+
+            const dataTahun = data.filter(item => item.thn_kunjungan === tahun);
+
+            const kunjunganKotaKabupaten = {};
+            dataTahun.forEach(item => {
+                const namaKotaKabupaten = item.kota_kabupaten?.nama_kota_kabupaten || 'Tidak Diketahui';
+                kunjunganKotaKabupaten[namaKotaKabupaten] = (kunjunganKotaKabupaten[namaKotaKabupaten] || 0) + 1;
+            });
+
+            const seriesData = Object.entries(kunjunganKotaKabupaten).map(([nama, total]) => ({
+                name: `${nama} (${total})`,
+                y: total
+            }));
+
+            Highcharts.chart('kunjungan_by_kota_kabupaten_per_bln_tahun', {
+                chart: {
+                    type: 'pie'
+                },
+                title: {
+                    text: `Distribusi Kunjungan Berdasarkan Kota/Kabupaten - Tahun ${tahun}`
+                },
+                tooltip: {
+                    pointFormat: '{series.name}: <b>{point.y} kunjungan</b>'
+                },
+                accessibility: {
+                    point: {
+                        valueSuffix: ' kunjungan'
+                    }
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            enabled: true,
+                            format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Kunjungan',
+                    colorByPoint: true,
+                    data: seriesData
+                }]
+            });
+        }
+
+        const loadKecamatanKunjungan = (data) => {
+            const tahun = $('#filter_by_wilayah').val();
+
+            if (!tahun) {
+                Highcharts.chart('kunjungan_by_kecamatan_per_bln_tahun', {
+                    chart: {
+                        type: 'pie'
+                    },
+                    title: {
+                        text: 'Pilih Tahun untuk Menampilkan Data'
+                    },
+                    series: [{
+                        name: 'Kunjungan',
+                        data: []
+                    }],
+                    xAxis: {
+                        categories: []
+                    },
+                    yAxis: {
+                        title: {
+                            text: ''
+                        }
+                    }
+                });
+                return;
+            }
+
+            const dataTahun = data.filter(item => item.thn_kunjungan === tahun);
+
+            const kunjunganByKecamatan = {};
+            dataTahun.forEach(item => {
+                const namaKotaKabupaten = item.kecamatan?.nama_kecamatan || 'Tidak Diketahui';
+                kunjunganByKecamatan[namaKotaKabupaten] = (kunjunganByKecamatan[namaKotaKabupaten] || 0) + 1;
+            });
+
+            const seriesData = Object.entries(kunjunganByKecamatan).map(([nama, total]) => ({
+                name: `${nama} (${total})`,
+                y: total
+            }));
+
+            Highcharts.chart('kunjungan_by_kecamatan_per_bln_tahun', {
+                chart: {
+                    type: 'pie'
+                },
+                title: {
+                    text: `Distribusi Kunjungan Berdasarkan Kecamatan - Tahun ${tahun}`
+                },
+                tooltip: {
+                    pointFormat: '{series.name}: <b>{point.y} kunjungan</b>'
+                },
+                accessibility: {
+                    point: {
+                        valueSuffix: ' kunjungan'
+                    }
+                },
+                plotOptions: {
+                    pie: {
+                        allowPointSelect: true,
+                        cursor: 'pointer',
+                        dataLabels: {
+                            enabled: true,
+                            format: '<b>{point.name}</b>: {point.percentage:.1f} %'
+                        }
+                    }
+                },
+                series: [{
+                    name: 'Kunjungan',
+                    colorByPoint: true,
+                    data: seriesData
+                }]
+            });
+        }
     </script>

@@ -60,7 +60,7 @@ class BukuTamu extends Model
 
     public function kota_kabupaten()
     {
-        return $this->belongsTo(KotaKabupaten::class, 'kd_provinsi', 'kd_kota_kabupaten');
+        return $this->belongsTo(KotaKabupaten::class, 'kd_kota_kabupaten', 'kd_kota_kabupaten');
     }
 
     public function kecamatan()
