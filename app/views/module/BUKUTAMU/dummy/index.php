@@ -155,7 +155,7 @@
                         kd_alasan_kunjungan_buku_tamu: it.kd_alasan_kunjungan_buku_tamu,
                         kd_sumber_informasi_buku_tamu: it.kd_sumber_informasi_buku_tamu,
                         kd_sumber_informasi_detail_buku_tamu: it.kd_sumber_informasi_detail_buku_tamu,
-                        tgl_kunjungan: it.tgl_kunjungan,
+                        tgl_kunjungan: moment(it.tgl_kunjungan).format("YYYY-MM-DD"),
                         bln_kunjungan: moment(it.tgl_kunjungan).format("MM"),
                         thn_kunjungan: moment(it.tgl_kunjungan).format("YYYY"),
                         waktu_kunjungan: it.waktu_kunjungan,

@@ -137,6 +137,19 @@ class BukuTamuController extends Controller
         }
     }
 
+    public function allDataKunjunganBukuTamu()
+    {
+        $kunjunganBukutamu = $this->model('BukuTamuModels')->getAllKunjunganBukuTamu();
+
+        header('Content-Type: application/json');
+
+        if ($kunjunganBukutamu) {
+            echo json_encode(['status' => 'success', 'data' => $kunjunganBukutamu]);
+        } else {
+            echo json_encode(['status' => 'error', 'message' => 'Tidak ada data.']);
+        }
+    }
+
     public function validaSimpanSumberInformasi()
     {
         header('Content-Type: application/json');

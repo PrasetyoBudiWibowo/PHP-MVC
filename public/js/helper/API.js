@@ -279,6 +279,31 @@ async function getAllKecamatan(url) {
   }
 }
 
+async function getAllKunjunganBukutamu(url) {
+  try {
+    const response = await fetch(`${url}/bukutamu/allDataKunjunganBukuTamu`);
+    const result = await response.json();
+
+    if (result.status === "success") {
+      return result.data;
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: `Terjadi kesalahan pada server.`,
+      });
+      return [];
+    }
+  } catch (error) {
+    Swal.fire({
+      icon: "error",
+      title: "Gagal",
+      text: `Terjadi kesalahan ${error.message}.`,
+    });
+    return [];
+  }
+}
+
 window.getAllDataKaryawan = getAllDataKaryawan;
 window.getAllDataKaryawanNew = getAllDataKaryawanNew;
 window.getAllDataSumberInformasi = getAllDataSumberInformasi;
@@ -290,3 +315,4 @@ window.getAllSales = getAllSales;
 window.getAllProvinsi = getAllProvinsi;
 window.getAllKotaKabupaten = getAllKotaKabupaten;
 window.getAllKecamatan = getAllKecamatan;
+window.getAllKunjunganBukutamu = getAllKunjunganBukutamu;

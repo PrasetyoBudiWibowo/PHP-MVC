@@ -144,6 +144,49 @@ class BukuTamuModels
         return $data;
     }
 
+    public function getAllKunjunganBukuTamu()
+    {
+        $data = BukuTamu::with('alasan_kunjungan')
+            ->with('sales')
+            ->with('provinsi')
+            ->with('kota_kabupaten')
+            ->with('kecamatan')
+            ->with('sumber_informasi_buku_tamu')
+            ->with('sumber_informasi_detail_buku_tamu')
+            ->get();
+
+        $result = $data->map(function ($d) {
+            return [
+                'kd_buku_tamu' => $d->kd_buku_tamu,
+                'kd_buku_tamu_awal' => $d->kd_buku_tamu_awal,
+                'nama_pengunjung' => $d->nama_pengunjung,
+                'status_kunjungan' => $d->status_kunjungan,
+                'kd_alasan_kunjungan_buku_tamu' => $d->kd_alasan_kunjungan_buku_tamu,
+                'kd_sumber_informasi_buku_tamu' => $d->kd_sumber_informasi_buku_tamu,
+                'tgl_kunjungan' => $d->tgl_kunjungan,
+                'bln_kunjungan' => $d->bln_kunjungan,
+                'thn_kunjungan' => $d->thn_kunjungan,
+                'waktu_kunjungan' => $d->waktu_kunjungan,
+                'kd_master_sales' => $d->kd_master_sales,
+                'sales' => [
+                    'kd_karyawan' => $d->sales->kd_karyawan,
+                    'karyawan' => [
+                        'nama_karyawan' => $d->sales->karyawan->nama_karyawan,
+                        'nama_panggilan_karyawan' => $d->sales->karyawan->nama_panggilan_karyawan,
+                    ],
+                ],
+                'alasan_kunjungan' => [
+                    'nama_alasan_kunjungan' => $d->alasan_kunjungan->nama_alasan_kunjungan
+                ],
+                'sumber_informasi' => [
+                    'nm_sumber_informasi' => $d->sumber_informasi_buku_tamu->nm_sumber_informasi ?? null
+                ],
+            ];
+        });
+
+        return $result;
+    }
+
     public function cekSumberInformasiByKode($kdSumberInforamsi)
     {
         $result = SumberInformasiBukuTamu::where('kd_sumber_informasi_buku_tamu', '=', $kdSumberInforamsi)->first();
@@ -605,112 +648,115 @@ class BukuTamuModels
             $simpanDummyKunjunganBukuTamu = [];
 
             foreach ($data as $d) {
-                $cekProvinsi = Provinsi::find($d['kd_provinsi']);
-                $cekKotaKabupaten = KotaKabupaten::find($d['kd_kota_kabupaten']);
 
-                if (!$cekProvinsi) {
-                    $log->error("Validasi gagal untuk Provinsi", [
-                        'invalid_input' => 'PROVINSI',
-                        'expected_format' => 'PROVINSI TIDAK DITEMUKAN'
-                    ]);
+                if ($d['thn_kunjungan'] !== "0000") {
+                    $cekProvinsi = Provinsi::find($d['kd_provinsi']);
+                    $cekKotaKabupaten = KotaKabupaten::find($d['kd_kota_kabupaten']);
 
-                    throw new \Exception("PROVINSI TIDAK DITEMUKAN");
-                }
-
-                if (!$cekKotaKabupaten) {
-                    $log->error("Validasi gagal untuk KotaKabupaten", [
-                        'invalid_input' => 'KOTA / KABUPATEN',
-                        'expected_format' => 'KOTA / KABUPATEN TIDAK DITEMUKAN'
-                    ]);
-
-                    throw new \Exception("KOTA / KABUPATEN TIDAK DITEMUKAN");
-                }
-
-                if (!empty($d['kd_kecamatan'])) {
-                    $cekKecamatan = Kecamatan::find($d['kd_kecamatan']);
-
-                    if (!$cekKecamatan) {
-                        $log->error("Validasi gagal untuk Kecamatan", [
-                            'invalid_input' => 'KECAMATAN',
-                            'expected_format' => 'KECAMATAN TIDAK DITEMUKAN'
+                    if (!$cekProvinsi) {
+                        $log->error("Validasi gagal untuk Provinsi", [
+                            'invalid_input' => 'PROVINSI',
+                            'expected_format' => 'PROVINSI TIDAK DITEMUKAN'
                         ]);
 
-                        throw new \Exception("KECAMATAN TIDAK DITEMUKAN");
+                        throw new \Exception("PROVINSI TIDAK DITEMUKAN");
                     }
-                }
 
-                $cekAlasanKunjungan = AlasanKunjunganBukuTamu::find($d['kd_alasan_kunjungan_buku_tamu']);
-
-                if (!$cekAlasanKunjungan) {
-                    $log->error("Validasi gagal untuk AlasanKunjunganBukuTamu", [
-                        'invalid_input' => 'ALASAN KUNJUNGAN',
-                        'expected_format' => 'ALASAN KUNJUNGAN TIDAK DITEMUKAN'
-                    ]);
-
-                    throw new \Exception("ALASAN KUNJUNGAN TIDAK DITEMUKAN");
-                }
-
-                if (!empty($d['kd_sumber_informasi_buku_tamu'])) {
-
-                    $cekSumberInformasi = SumberInformasiBukuTamu::find($d['kd_sumber_informasi_buku_tamu']);
-
-                    if (!$cekSumberInformasi) {
-                        $log->error("Validasi gagal untuk SumberInformasiBukuTamu", [
-                            'invalid_input' => 'SUMBER INFORMASI',
-                            'expected_format' => 'SUMBER INFORMASI TIDAK DITEMUKAN'
+                    if (!$cekKotaKabupaten) {
+                        $log->error("Validasi gagal untuk KotaKabupaten", [
+                            'invalid_input' => 'KOTA / KABUPATEN',
+                            'expected_format' => 'KOTA / KABUPATEN TIDAK DITEMUKAN'
                         ]);
 
-                        throw new \Exception("SUMBER INFORMASI TIDAK DITEMUKAN");
+                        throw new \Exception("KOTA / KABUPATEN TIDAK DITEMUKAN");
                     }
-                }
 
-                if (!empty($d['kd_sumber_informasi_detail_buku_tamu'])) {
+                    if (!empty($d['kd_kecamatan'])) {
+                        $cekKecamatan = Kecamatan::find($d['kd_kecamatan']);
 
-                    $cekSumberInformasiDetail = SumberInformasiDetailBukuTamu::find($d['kd_sumber_informasi_detail_buku_tamu']);
+                        if (!$cekKecamatan) {
+                            $log->error("Validasi gagal untuk Kecamatan", [
+                                'invalid_input' => 'KECAMATAN',
+                                'expected_format' => 'KECAMATAN TIDAK DITEMUKAN'
+                            ]);
 
-                    if (!$cekSumberInformasiDetail) {
-                        $log->error("Validasi gagal untuk input SumberInformasiDetailBukuTamu", [
-                            'invalid_input' => 'SUMBER INFORMASI DETAIL',
-                            'expected_format' => 'SUMBER INFORMASI DETAIL TIDAK DITEMUKAN'
+                            throw new \Exception("KECAMATAN TIDAK DITEMUKAN");
+                        }
+                    }
+
+                    $cekAlasanKunjungan = AlasanKunjunganBukuTamu::find($d['kd_alasan_kunjungan_buku_tamu']);
+
+                    if (!$cekAlasanKunjungan) {
+                        $log->error("Validasi gagal untuk AlasanKunjunganBukuTamu", [
+                            'invalid_input' => 'ALASAN KUNJUNGAN',
+                            'expected_format' => 'ALASAN KUNJUNGAN TIDAK DITEMUKAN'
                         ]);
 
-                        throw new \Exception("SUMBER INFORMASI DETAIL TIDAK DITEMUKAN");
+                        throw new \Exception("ALASAN KUNJUNGAN TIDAK DITEMUKAN");
                     }
+
+                    if (!empty($d['kd_sumber_informasi_buku_tamu'])) {
+
+                        $cekSumberInformasi = SumberInformasiBukuTamu::find($d['kd_sumber_informasi_buku_tamu']);
+
+                        if (!$cekSumberInformasi) {
+                            $log->error("Validasi gagal untuk SumberInformasiBukuTamu", [
+                                'invalid_input' => 'SUMBER INFORMASI',
+                                'expected_format' => 'SUMBER INFORMASI TIDAK DITEMUKAN'
+                            ]);
+
+                            throw new \Exception("SUMBER INFORMASI TIDAK DITEMUKAN");
+                        }
+                    }
+
+                    if (!empty($d['kd_sumber_informasi_detail_buku_tamu'])) {
+
+                        $cekSumberInformasiDetail = SumberInformasiDetailBukuTamu::find($d['kd_sumber_informasi_detail_buku_tamu']);
+
+                        if (!$cekSumberInformasiDetail) {
+                            $log->error("Validasi gagal untuk input SumberInformasiDetailBukuTamu", [
+                                'invalid_input' => 'SUMBER INFORMASI DETAIL',
+                                'expected_format' => 'SUMBER INFORMASI DETAIL TIDAK DITEMUKAN'
+                            ]);
+
+                            throw new \Exception("SUMBER INFORMASI DETAIL TIDAK DITEMUKAN");
+                        }
+                    }
+
+                    $kd_buku_tamu = $this->generateKdBukuTamu();
+
+                    $kunjunganBaruBukutamu = new BukuTamu();
+                    $kunjunganBaruBukutamu->kd_buku_tamu = $kd_buku_tamu;
+                    $kunjunganBaruBukutamu->nama_pengunjung = $d['nama_pengunjung'];
+                    $kunjunganBaruBukutamu->kd_master_sales = $d['kd_master_sales'];
+                    $kunjunganBaruBukutamu->status_kunjungan = "BARU";
+                    $kunjunganBaruBukutamu->kd_provinsi = $d['kd_provinsi'];
+                    $kunjunganBaruBukutamu->kd_kota_kabupaten = $d['kd_kota_kabupaten'];
+                    $kunjunganBaruBukutamu->kd_kecamatan = $d['kd_kecamatan'];
+                    $kunjunganBaruBukutamu->kd_alasan_kunjungan_buku_tamu = $d['kd_alasan_kunjungan_buku_tamu'];
+                    $kunjunganBaruBukutamu->kd_sumber_informasi_buku_tamu = $d['kd_sumber_informasi_buku_tamu'];
+                    $kunjunganBaruBukutamu->kd_sumber_informasi_detail_buku_tamu = $d['kd_sumber_informasi_detail_buku_tamu'];
+                    $kunjunganBaruBukutamu->tgl_kunjungan = $d['tgl_kunjungan'];
+                    $kunjunganBaruBukutamu->bln_kunjungan = $d['bln_kunjungan'];
+                    $kunjunganBaruBukutamu->thn_kunjungan = $d['thn_kunjungan'];
+                    $kunjunganBaruBukutamu->waktu_kunjungan = $d['waktu_kunjungan'];
+                    $kunjunganBaruBukutamu->user_input = $d['kd_user'];
+                    $kunjunganBaruBukutamu->tgl_input = $tgl_input;
+                    $kunjunganBaruBukutamu->bln_input = $bln_input;
+                    $kunjunganBaruBukutamu->thn_input = $thn_input;
+                    $kunjunganBaruBukutamu->waktu_input = $waktu_input;
+                    $kunjunganBaruBukutamu->device = $device;
+                    $kunjunganBaruBukutamu->alamat_device = $ipDevice;
+                    $kunjunganBaruBukutamu->type_device = $deviceType;
+
+                    $kunjunganBaruBukutamu->save();
+
+                    if (!$kunjunganBaruBukutamu) {
+                        throw new Exception("Gagal simpan karyawan.");
+                    }
+
+                    $simpanDummyKunjunganBukuTamu[] = $kunjunganBaruBukutamu;
                 }
-
-                $kd_buku_tamu = $this->generateKdBukuTamu();
-
-                $kunjunganBaruBukutamu = new BukuTamu();
-                $kunjunganBaruBukutamu->kd_buku_tamu = $kd_buku_tamu;
-                $kunjunganBaruBukutamu->nama_pengunjung = $d['nama_pengunjung'];
-                $kunjunganBaruBukutamu->kd_master_sales = $d['kd_master_sales'];
-                $kunjunganBaruBukutamu->status_kunjungan = "BARU";
-                $kunjunganBaruBukutamu->kd_provinsi = $d['kd_provinsi'];
-                $kunjunganBaruBukutamu->kd_kota_kabupaten = $d['kd_kota_kabupaten'];
-                $kunjunganBaruBukutamu->kd_kecamatan = $d['kd_kecamatan'];
-                $kunjunganBaruBukutamu->kd_alasan_kunjungan_buku_tamu = $d['kd_alasan_kunjungan_buku_tamu'];
-                $kunjunganBaruBukutamu->kd_sumber_informasi_buku_tamu = $d['kd_sumber_informasi_buku_tamu'];
-                $kunjunganBaruBukutamu->kd_sumber_informasi_detail_buku_tamu = $d['kd_sumber_informasi_detail_buku_tamu'];
-                $kunjunganBaruBukutamu->tgl_kunjungan = $d['tgl_kunjungan'];
-                $kunjunganBaruBukutamu->bln_kunjungan = $d['bln_kunjungan'];
-                $kunjunganBaruBukutamu->thn_kunjungan = $d['thn_kunjungan'];
-                $kunjunganBaruBukutamu->waktu_kunjungan = $d['waktu_kunjungan'];
-                $kunjunganBaruBukutamu->user_input = $d['kd_user'];
-                $kunjunganBaruBukutamu->tgl_input = $tgl_input;
-                $kunjunganBaruBukutamu->bln_input = $bln_input;
-                $kunjunganBaruBukutamu->thn_input = $thn_input;
-                $kunjunganBaruBukutamu->waktu_input = $waktu_input;
-                $kunjunganBaruBukutamu->device = $device;
-                $kunjunganBaruBukutamu->alamat_device = $ipDevice;
-                $kunjunganBaruBukutamu->type_device = $deviceType;
-
-                $kunjunganBaruBukutamu->save();
-
-                if (!$kunjunganBaruBukutamu) {
-                    throw new Exception("Gagal simpan karyawan.");
-                }
-
-                $simpanDummyKunjunganBukuTamu[] = $kunjunganBaruBukutamu;
             }
 
             $log->info("<================= PROSES SIMPAN DATA KE DATABASE BERHASIL =================>");
